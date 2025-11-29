@@ -126,7 +126,7 @@
             <div class="card-body">
                 {% if recent_appointments %}
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm" id="recent-appointments-table">
                         <thead>
                             <tr>
                                 <th>Patient</th>
@@ -137,10 +137,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for appointment in recent_appointments[:5] %}
+                            {% for appointment_tuple in recent_appointments[:5] %}
+                            {% set appointment = appointment_tuple[0] %}
+                            {% set patient_name = appointment_tuple[1] %}
+                            {% set doctor_name = appointment_tuple[2] %}
                             <tr>
-                                <td>{{ appointment.patient_name }}</td>
-                                <td>{{ appointment.doctor_name }}</td>
+                                <td>{{ patient_name }}</td>
+                                <td>{{ doctor_name }}</td>
                                 <td>{{ appointment.appointment_date }}</td>
                                 <td>
                                     <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'secondary' }}">
@@ -164,4 +167,59 @@
         </div>
     </div>
 </div>
+
+<script>
+// Function to format date as YYYY-MM-DD
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+        return dateString; // Return original if invalid date
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Function to update recent appointments
+function updateRecentAppointments() {
+    fetch('/admin/dashboard/recent-appointments')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#recent-appointments-table tbody');
+            if (tbody && data.appointments) {
+                // Clear existing rows
+                tbody.innerHTML = '';
+                
+                // Add updated rows
+                data.appointments.slice(0, 5).forEach(appointment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${appointment.patient_name}</td>
+                        <td>${appointment.doctor_name}</td>
+                        <td>${formatDate(appointment.appointment_date)}</td>
+                        <td>
+                            <span class="badge bg-${appointment.status === 'completed' ? 'success' : appointment.status === 'booked' ? 'primary' : 'secondary'}">
+                                ${appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/admin/patient/${appointment.patient_id}/history" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-clock-history"></i> Patient History
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => console.error('Error updating appointments:', error));
+}
+
+// Update appointments every 30 seconds
+setInterval(updateRecentAppointments, 30000);
+
+// Initial update after 5 seconds to give page time to load
+setTimeout(updateRecentAppointments, 5000);
+</script>
 {% endblock %}

@@ -58,10 +58,10 @@
                                     </div>
                                 </td>
                                 <td>{{ patient.phone or '-' }}</td>
-                                <td>{{ patient.email }}</td>
+                                <td>{{ patient.user.email if patient.user else '-' }}</td>
                                 <td>{{ patient.address or '-' }}</td>
-                                <td>{{ patient.username }}</td>
-                                <td>{{ patient.created_at[:10] if patient.created_at else '-' }}</td>
+                                <td>{{ patient.user.username if patient.user else '-' }}</td>
+                                <td>{{ patient.created_at.strftime('%Y-%m-%d') if patient.created_at else '-' }}</td>
                                 <td>
                                     <a href="{{ url_for('admin_patient_history', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-clock-history"></i> View History

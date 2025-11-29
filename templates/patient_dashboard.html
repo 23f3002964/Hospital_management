@@ -138,12 +138,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for appointment in appointments %}
+                            {% for appointment_tuple in appointments %}
+                            {% set appointment = appointment_tuple[0] %}
+                            {% set doctor_name = appointment_tuple[1] %}
+                            {% set specialization = appointment_tuple[2] %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td>{{ appointment.doctor_name }}</td>
+                                <td>{{ doctor_name }}</td>
                                 <td>
-                                    <span class="badge bg-info">{{ appointment.specialization }}</span>
+                                    <span class="badge bg-info">{{ specialization }}</span>
                                 </td>
                                 <td>{{ appointment.appointment_date }}</td>
                                 <td>{{ appointment.appointment_time }}</td>

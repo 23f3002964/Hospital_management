@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 import hashlib
 from datetime import datetime, date, timedelta
 from functools import wraps
@@ -9,106 +10,221 @@ import re
 
 app = Flask(__name__)
 app.secret_key = 'hospital-management-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hospital_new.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-DATABASE = 'hospital_new.db'
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
 
-def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+# Database Models
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(nullable=False)
+    role: Mapped[str] = mapped_column(nullable=False)  # admin, doctor, patient
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    
+    # Relationships
+    doctor = db.relationship('Doctor', back_populates='user', uselist=False)
+    patient = db.relationship('Patient', back_populates='user', uselist=False)
+
+class Department(db.Model):
+    __tablename__ = 'departments'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    description: Mapped[str] = mapped_column()
+
+class Doctor(db.Model):
+    __tablename__ = 'doctors'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey('users.id'), nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    specialization: Mapped[str] = mapped_column(nullable=True)
+    phone: Mapped[str] = mapped_column(nullable=True)
+    availability_days: Mapped[str] = mapped_column(nullable=True)
+    availability_hours: Mapped[str] = mapped_column(nullable=True)
+    availability_slots: Mapped[str] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', back_populates='doctor')
+    appointments = db.relationship('Appointment', back_populates='doctor')
+
+class Patient(db.Model):
+    __tablename__ = 'patients'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey('users.id'), nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    phone: Mapped[str] = mapped_column()
+    address: Mapped[str] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', back_populates='patient')
+    appointments = db.relationship('Appointment', back_populates='patient')
+
+class Appointment(db.Model):
+    __tablename__ = 'appointments'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    patient_id: Mapped[int] = mapped_column(db.ForeignKey('patients.id'), nullable=False)
+    doctor_id: Mapped[int] = mapped_column(db.ForeignKey('doctors.id'), nullable=False)
+    appointment_date: Mapped[date] = mapped_column(nullable=False)
+    appointment_time: Mapped[str] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(default='booked')  # booked, completed, cancelled
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    
+    # Relationships
+    patient = db.relationship('Patient', back_populates='appointments')
+    doctor = db.relationship('Doctor', back_populates='appointments')
+    treatment = db.relationship('Treatment', back_populates='appointment', uselist=False)
+
+class Treatment(db.Model):
+    __tablename__ = 'treatments'
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    appointment_id: Mapped[int] = mapped_column(db.ForeignKey('appointments.id'), nullable=False)
+    diagnosis: Mapped[str] = mapped_column()
+    prescription: Mapped[str] = mapped_column()
+    treatment_notes: Mapped[str] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    
+    # Relationships
+    appointment = db.relationship('Appointment', back_populates='treatment')
 
 def init_db():
-    conn = get_db_connection()
+    with app.app_context():
+        # Check if tables already exist and have data
+        if User.query.first() is None:
+            # Only initialize if no data exists
+            db.create_all()
+            
+            # Only create the admin user if no users exist
+            admin_user = User.query.first()
+            if not admin_user:
+                # Create default admin user only
+                admin_password = hashlib.sha256('admin'.encode()).hexdigest()
+                admin = User(username='admin', email='admin@hospital.com', password_hash=admin_password, role='admin')
+                db.session.add(admin)
+                db.session.commit()
+        else:
+            # Tables exist, no need for initialization
+            print("Database already initialized.")
+
+def migrate_existing_data():
+    """Migrate data from existing SQLite database to SQLAlchemy models"""
+    import sqlite3
     
-    # Create users table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('admin', 'doctor', 'patient')),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Create departments table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS departments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            description TEXT
-        )
-    ''')
-    
-    # Create doctors table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS doctors (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            specialization TEXT,
-            phone TEXT,
-            availability_days TEXT,
-            availability_hours TEXT,
-            availability_slots TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Create patients table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS patients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            phone TEXT,
-            address TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Create appointments table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS appointments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            patient_id INTEGER NOT NULL,
-            doctor_id INTEGER NOT NULL,
-            appointment_date DATE NOT NULL,
-            appointment_time TEXT NOT NULL,
-            status TEXT DEFAULT 'booked' CHECK(status IN ('booked', 'completed', 'cancelled')),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE,
-            FOREIGN KEY (doctor_id) REFERENCES doctors (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Create treatments table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS treatments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            appointment_id INTEGER NOT NULL,
-            diagnosis TEXT,
-            prescription TEXT,
-            treatment_notes TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (appointment_id) REFERENCES appointments (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Only create the admin user if no users exist
-    admin_exists = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    
-    if admin_exists == 0:
-        # Create default admin user only
-        admin_password = hashlib.sha256('admin'.encode()).hexdigest()
-        conn.execute('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-                     ('admin', 'admin@hospital.com', admin_password, 'admin'))
-        conn.commit()
-    
-    conn.close()
+    with app.app_context():
+        # Check if we already have data in the new SQLAlchemy models
+        if User.query.first() is not None:
+            print("Data already migrated, skipping migration.")
+            return
+            
+        # Connect to the existing database
+        try:
+            conn = sqlite3.connect('hospital_new.db')
+            cursor = conn.cursor()
+            
+            # Migrate users
+            cursor.execute('SELECT id, username, email, password_hash, role, created_at FROM users')
+            users = cursor.fetchall()
+            for user in users:
+                new_user = User(
+                    id=user[0],
+                    username=user[1],
+                    email=user[2],
+                    password_hash=user[3],
+                    role=user[4],
+                    created_at=datetime.strptime(user[5], '%Y-%m-%d %H:%M:%S') if user[5] else datetime.utcnow()
+                )
+                db.session.add(new_user)
+            
+            # Migrate departments
+            cursor.execute('SELECT id, name, description FROM departments')
+            departments = cursor.fetchall()
+            for dept in departments:
+                new_dept = Department(
+                    id=dept[0],
+                    name=dept[1],
+                    description=dept[2]
+                )
+                db.session.add(new_dept)
+            
+            # Migrate doctors
+            cursor.execute('SELECT id, user_id, name, specialization, phone, availability_days, availability_hours, availability_slots, created_at FROM doctors')
+            doctors = cursor.fetchall()
+            for doctor in doctors:
+                new_doctor = Doctor(
+                    id=doctor[0],
+                    user_id=doctor[1],
+                    name=doctor[2],
+                    specialization=doctor[3],
+                    phone=doctor[4],
+                    availability_days=doctor[5],
+                    availability_hours=doctor[6],
+                    availability_slots=doctor[7],
+                    created_at=datetime.strptime(doctor[8], '%Y-%m-%d %H:%M:%S') if doctor[8] else datetime.utcnow()
+                )
+                db.session.add(new_doctor)
+            
+            # Migrate patients
+            cursor.execute('SELECT id, user_id, name, phone, address, created_at FROM patients')
+            patients = cursor.fetchall()
+            for patient in patients:
+                new_patient = Patient(
+                    id=patient[0],
+                    user_id=patient[1],
+                    name=patient[2],
+                    phone=patient[3],
+                    address=patient[4],
+                    created_at=datetime.strptime(patient[5], '%Y-%m-%d %H:%M:%S') if patient[5] else datetime.utcnow()
+                )
+                db.session.add(new_patient)
+            
+            # Migrate appointments
+            cursor.execute('SELECT id, patient_id, doctor_id, appointment_date, appointment_time, status, created_at FROM appointments')
+            appointments = cursor.fetchall()
+            for appointment in appointments:
+                new_appointment = Appointment(
+                    id=appointment[0],
+                    patient_id=appointment[1],
+                    doctor_id=appointment[2],
+                    appointment_date=datetime.strptime(appointment[3], '%Y-%m-%d').date() if appointment[3] else date.today(),
+                    appointment_time=appointment[4],
+                    status=appointment[5],
+                    created_at=datetime.strptime(appointment[6], '%Y-%m-%d %H:%M:%S') if appointment[6] else datetime.utcnow()
+                )
+                db.session.add(new_appointment)
+            
+            # Migrate treatments
+            cursor.execute('SELECT id, appointment_id, diagnosis, prescription, treatment_notes, created_at FROM treatments')
+            treatments = cursor.fetchall()
+            for treatment in treatments:
+                new_treatment = Treatment(
+                    id=treatment[0],
+                    appointment_id=treatment[1],
+                    diagnosis=treatment[2],
+                    prescription=treatment[3],
+                    treatment_notes=treatment[4],
+                    created_at=datetime.strptime(treatment[5], '%Y-%m-%d %H:%M:%S') if treatment[5] else datetime.utcnow()
+                )
+                db.session.add(new_treatment)
+            
+            # Commit all changes
+            db.session.commit()
+            conn.close()
+            print("Data migration completed successfully!")
+            
+        except Exception as e:
+            print(f"Error during data migration: {e}")
+            db.session.rollback()
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -194,21 +310,18 @@ def login():
         
         password_hash = hash_password(password)
         
-        conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE username = ? AND password_hash = ?', 
-                          (username, password_hash)).fetchone()
-        conn.close()
+        user = User.query.filter_by(username=username, password_hash=password_hash).first()
         
         if user:
-            session['user_id'] = user['id']
-            session['username'] = sanitize_input(user['username'])
-            session['user_role'] = sanitize_input(user['role'])
+            session['user_id'] = user.id
+            session['username'] = sanitize_input(user.username)
+            session['user_role'] = sanitize_input(user.role)
             
-            if user['role'] == 'admin':
+            if user.role == 'admin':
                 return redirect(url_for('admin_dashboard'))
-            elif user['role'] == 'doctor':
+            elif user.role == 'doctor':
                 return redirect(url_for('doctor_dashboard'))
-            elif user['role'] == 'patient':
+            elif user.role == 'patient':
                 return redirect(url_for('patient_dashboard'))
         else:
             flash('Invalid username or password', 'error')
@@ -255,23 +368,16 @@ def register():
         
         password_hash = hash_password(password)
         
-        conn = get_db_connection()
-        try:
-            cursor = conn.execute('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-                                (username, email, password_hash, 'patient'))
-            user_id = cursor.lastrowid
-            
-            conn.execute('INSERT INTO patients (user_id, name, phone, address) VALUES (?, ?, ?, ?)',
-                        (user_id, name, phone, address))
-            
-            conn.commit()
-            conn.close()
-            
-            flash('Registration successful! Please login.', 'success')
-            return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash('Username or email already exists', 'error')
-            conn.close()
+        user = User(username=username, email=email, password_hash=password_hash, role='patient')
+        db.session.add(user)
+        db.session.commit()
+        
+        patient = Patient(user_id=user.id, name=name, phone=phone, address=address)
+        db.session.add(patient)
+        db.session.commit()
+        
+        flash('Registration successful! Please login.', 'success')
+        return redirect(url_for('login'))
     
     return render_template('register.html')
 
@@ -285,21 +391,21 @@ def logout():
 @login_required
 @role_required(['admin'])
 def admin_dashboard():
-    conn = get_db_connection()
+    total_doctors = Doctor.query.count()
+    total_patients = Patient.query.count()
+    total_appointments = Appointment.query.count()
     
-    total_doctors = conn.execute('SELECT COUNT(*) as count FROM doctors').fetchone()['count']
-    total_patients = conn.execute('SELECT COUNT(*) as count FROM patients').fetchone()['count']
-    total_appointments = conn.execute('SELECT COUNT(*) as count FROM appointments').fetchone()['count']
-    
-    recent_appointments = conn.execute('''
-        SELECT a.*, p.id as patient_id, p.name as patient_name, d.name as doctor_name 
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.id
-        JOIN doctors d ON a.doctor_id = d.id
-        ORDER BY a.created_at DESC LIMIT 10
-    ''').fetchall()
-    
-    conn.close()
+    # Join Appointment with Patient and Doctor to get names
+    # Show only booked and completed appointments in recent list
+    recent_appointments = db.session.query(
+        Appointment,
+        Patient.name.label('patient_name'),
+        Doctor.name.label('doctor_name')
+    ).join(Patient, Appointment.patient_id == Patient.id)\
+     .join(Doctor, Appointment.doctor_id == Doctor.id)\
+     .filter(Appointment.status.in_(['booked', 'completed']))\
+     .order_by(Appointment.created_at.desc())\
+     .limit(10).all()
     
     return render_template('admin_dashboard.html', 
                          total_doctors=total_doctors,
@@ -307,27 +413,54 @@ def admin_dashboard():
                          total_appointments=total_appointments,
                          recent_appointments=recent_appointments)
 
+@app.route('/admin/dashboard/recent-appointments')
+@login_required
+@role_required(['admin'])
+def admin_dashboard_recent_appointments():
+    # Join Appointment with Patient and Doctor to get names
+    # Show only booked and completed appointments
+    recent_appointments = db.session.query(
+        Appointment,
+        Patient.name.label('patient_name'),
+        Doctor.name.label('doctor_name')
+    ).join(Patient, Appointment.patient_id == Patient.id)\
+     .join(Doctor, Appointment.doctor_id == Doctor.id)\
+     .filter(Appointment.status.in_(['booked', 'completed']))\
+     .order_by(Appointment.created_at.desc())\
+     .limit(10).all()
+    
+    # Convert to JSON-serializable format
+    appointments_data = []
+    for appointment_tuple in recent_appointments:
+        appointment = appointment_tuple[0]
+        patient_name = appointment_tuple[1]
+        doctor_name = appointment_tuple[2]
+        
+        appointments_data.append({
+            'id': appointment.id,
+            'patient_id': appointment.patient_id,
+            'patient_name': patient_name,
+            'doctor_name': doctor_name,
+            'appointment_date': appointment.appointment_date.isoformat() if hasattr(appointment.appointment_date, 'isoformat') else str(appointment.appointment_date),
+            'status': appointment.status
+        })
+    
+    return {'appointments': appointments_data}
+
 @app.route('/admin/doctors')
 @login_required
 @role_required(['admin'])
 def manage_doctors():
     search_query = request.args.get('search', '').strip()
     
-    conn = get_db_connection()
     if search_query:
-        doctors = conn.execute('''
-            SELECT d.*, u.username, u.email 
-            FROM doctors d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.name LIKE ? OR d.specialization LIKE ? OR u.username LIKE ?
-        ''', (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%')).fetchall()
+        doctors = Doctor.query.join(User).filter(
+            (Doctor.name.like(f'%{search_query}%')) |
+            (Doctor.specialization.like(f'%{search_query}%')) |
+            (User.username.like(f'%{search_query}%'))
+        ).all()
     else:
-        doctors = conn.execute('''
-            SELECT d.*, u.username, u.email 
-            FROM doctors d
-            JOIN users u ON d.user_id = u.id
-        ''').fetchall()
-    conn.close()
+        doctors = Doctor.query.join(User).all()
     
     return render_template('manage_doctors.html', doctors=doctors, search_query=search_query)
 
@@ -335,15 +468,7 @@ def manage_doctors():
 @login_required
 @role_required(['admin'])
 def edit_doctor(doctor_id):
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.*, u.username, u.email 
-        FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE d.id = ?
-    ''', (doctor_id,)).fetchone()
+    doctor = Doctor.query.join(User).filter(Doctor.id == doctor_id).first()
     
     if not doctor:
         flash('Doctor not found', 'error')
@@ -375,56 +500,32 @@ def edit_doctor(doctor_id):
         if errors:
             for error in errors:
                 flash(error, 'error')
-            conn.close()
             return render_template('edit_doctor.html', doctor=doctor)
         
-        try:
-            # Update doctor and user details
-            conn.execute('UPDATE doctors SET name = ?, specialization = ?, phone = ? WHERE id = ?',
-                        (name, specialization, phone, doctor_id))
-            conn.execute('UPDATE users SET email = ? WHERE id = ?',
-                        (email, doctor['user_id']))
-            conn.commit()
-            flash('Doctor updated successfully!', 'success')
-            return redirect(url_for('manage_doctors'))
-        except sqlite3.Error as e:
-            flash('An error occurred while updating the doctor', 'error')
-            conn.rollback()
-        finally:
-            conn.close()
-    else:
-        conn.close()
+        doctor.name = name
+        doctor.specialization = specialization
+        doctor.phone = phone
+        doctor.user.email = email
+        db.session.commit()
+        flash('Doctor updated successfully!', 'success')
+        return redirect(url_for('manage_doctors'))
     
+    # Handle GET request - display the form
     return render_template('edit_doctor.html', doctor=doctor)
 
 @app.route('/admin/doctors/delete/<int:doctor_id>', methods=['POST'])
 @login_required
 @role_required(['admin'])
 def delete_doctor(doctor_id):
-    conn = get_db_connection()
+    doctor = Doctor.query.filter(Doctor.id == doctor_id).first()
     
-    try:
-        # Get the user_id for this doctor
-        doctor_user = conn.execute('SELECT user_id FROM doctors WHERE id = ?', (doctor_id,)).fetchone()
-        
-        if not doctor_user:
-            flash('Doctor not found', 'error')
-            return redirect(url_for('manage_doctors'))
-        
-        # Delete the doctor record
-        conn.execute('DELETE FROM doctors WHERE id = ?', (doctor_id,))
-        
-        # Delete the user record (this will also delete any related records due to CASCADE)
-        conn.execute('DELETE FROM users WHERE id = ?', (doctor_user['user_id'],))
-        
-        conn.commit()
-        flash('Doctor deleted successfully!', 'success')
-    except sqlite3.Error as e:
-        flash('An error occurred while deleting the doctor', 'error')
-        conn.rollback()
-    finally:
-        conn.close()
+    if not doctor:
+        flash('Doctor not found', 'error')
+        return redirect(url_for('manage_doctors'))
     
+    db.session.delete(doctor)
+    db.session.commit()
+    flash('Doctor deleted successfully!', 'success')
     return redirect(url_for('manage_doctors'))
 
 @app.route('/admin/patients')
@@ -433,21 +534,15 @@ def delete_doctor(doctor_id):
 def manage_patients():
     search_query = request.args.get('search', '').strip()
     
-    conn = get_db_connection()
     if search_query:
-        patients = conn.execute('''
-            SELECT p.*, u.username, u.email, u.created_at
-            FROM patients p
-            JOIN users u ON p.user_id = u.id
-            WHERE p.name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR p.phone LIKE ?
-        ''', (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%')).fetchall()
+        patients = Patient.query.join(User).filter(
+            (Patient.name.like(f'%{search_query}%')) |
+            (User.username.like(f'%{search_query}%')) |
+            (User.email.like(f'%{search_query}%')) |
+            (Patient.phone.like(f'%{search_query}%'))
+        ).all()
     else:
-        patients = conn.execute('''
-            SELECT p.*, u.username, u.email, u.created_at
-            FROM patients p
-            JOIN users u ON p.user_id = u.id
-        ''').fetchall()
-    conn.close()
+        patients = Patient.query.join(User).all()
     
     return render_template('manage_patients.html', patients=patients, search_query=search_query)
 
@@ -493,23 +588,16 @@ def add_doctor():
         
         password_hash = hash_password(password)
         
-        conn = get_db_connection()
-        try:
-            cursor = conn.execute('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-                                (username, email, password_hash, 'doctor'))
-            user_id = cursor.lastrowid
-            
-            conn.execute('INSERT INTO doctors (user_id, name, specialization, phone) VALUES (?, ?, ?, ?)',
-                        (user_id, name, specialization, phone))
-            
-            conn.commit()
-            conn.close()
-            
-            flash('Doctor added successfully!', 'success')
-            return redirect(url_for('manage_doctors'))
-        except sqlite3.IntegrityError:
-            flash('Username or email already exists', 'error')
-            conn.close()
+        user = User(username=username, email=email, password_hash=password_hash, role='doctor')
+        db.session.add(user)
+        db.session.commit()
+        
+        doctor = Doctor(user_id=user.id, name=name, specialization=specialization, phone=phone)
+        db.session.add(doctor)
+        db.session.commit()
+        
+        flash('Doctor added successfully!', 'success')
+        return redirect(url_for('manage_doctors'))
     
     return render_template('add_doctor.html')
 
@@ -523,25 +611,21 @@ def admin_search():
     if not search_query:
         return redirect(url_for('admin_dashboard'))
     
-    conn = get_db_connection()
     results = []
     
     if search_type == 'doctors':
-        results = conn.execute('''
-            SELECT d.*, u.username, u.email 
-            FROM doctors d
-            JOIN users u ON d.user_id = u.id
-            WHERE d.name LIKE ? OR d.specialization LIKE ? OR u.username LIKE ?
-        ''', (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%')).fetchall()
+        results = Doctor.query.join(User).filter(
+            (Doctor.name.like(f'%{search_query}%')) |
+            (Doctor.specialization.like(f'%{search_query}%')) |
+            (User.username.like(f'%{search_query}%'))
+        ).all()
     elif search_type == 'patients':
-        results = conn.execute('''
-            SELECT p.*, u.username, u.email, u.created_at
-            FROM patients p
-            JOIN users u ON p.user_id = u.id
-            WHERE p.name LIKE ? OR u.username LIKE ? OR u.email LIKE ? OR p.phone LIKE ?
-        ''', (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%', f'%{search_query}%')).fetchall()
-    
-    conn.close()
+        results = Patient.query.join(User).filter(
+            (Patient.name.like(f'%{search_query}%')) |
+            (User.username.like(f'%{search_query}%')) |
+            (User.email.like(f'%{search_query}%')) |
+            (Patient.phone.like(f'%{search_query}%'))
+        ).all()
     
     return render_template('admin_search.html', 
                          results=results, 
@@ -553,31 +637,26 @@ def admin_search():
 @login_required
 @role_required(['doctor'])
 def doctor_dashboard():
-    conn = get_db_connection()
-    
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
         return redirect(url_for('logout'))
     
-    # Get appointments for the next 7 days
+    # Get appointments for the next 7 days with patient information
     today = date.today()
     week_end = today + timedelta(days=7)
     
-    appointments = conn.execute('''
-        SELECT a.*, p.name as patient_name, p.phone as patient_phone
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.id
-        WHERE a.doctor_id = ? AND a.appointment_date BETWEEN ? AND ? AND a.status = 'booked'
-        ORDER BY a.appointment_date, a.appointment_time
-    ''', (doctor['id'], today, week_end)).fetchall()
-    
-    conn.close()
+    appointments = db.session.query(
+        Appointment,
+        Patient.name.label('patient_name'),
+        Patient.phone.label('patient_phone')
+    ).join(Patient, Appointment.patient_id == Patient.id)\
+     .filter(
+        Appointment.doctor_id == doctor.id,
+        Appointment.appointment_date.between(today, week_end),
+        Appointment.status == 'booked'
+    ).order_by(Appointment.appointment_date, Appointment.appointment_time).all()
     
     return render_template('doctor_dashboard.html', 
                          doctor=doctor,
@@ -610,15 +689,13 @@ def complete_appointment(appointment_id):
             flash(error, 'error')
         return redirect(url_for('doctor_dashboard'))
     
-    conn = get_db_connection()
+    appointment = Appointment.query.filter(Appointment.id == appointment_id).first()
+    appointment.status = 'completed'
+    db.session.commit()
     
-    conn.execute('UPDATE appointments SET status = ? WHERE id = ?', ('completed', appointment_id))
-    
-    conn.execute('''INSERT INTO treatments (appointment_id, diagnosis, prescription, treatment_notes) 
-                    VALUES (?, ?, ?, ?)''', (appointment_id, diagnosis, prescription, treatment_notes))
-    
-    conn.commit()
-    conn.close()
+    treatment = Treatment(appointment_id=appointment_id, diagnosis=diagnosis, prescription=prescription, treatment_notes=treatment_notes)
+    db.session.add(treatment)
+    db.session.commit()
     
     flash('Appointment completed successfully!', 'success')
     return redirect(url_for('doctor_dashboard'))
@@ -627,34 +704,24 @@ def complete_appointment(appointment_id):
 @login_required
 @role_required(['doctor'])
 def doctor_cancel_appointment(appointment_id):
-    conn = get_db_connection()
-    
-    # Verify that this appointment belongs to this doctor
-    doctor = conn.execute('''
-        SELECT d.id FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
-        conn.close()
         return redirect(url_for('doctor_dashboard'))
     
-    # Check if appointment belongs to this doctor
-    appointment = conn.execute('''
-        SELECT * FROM appointments 
-        WHERE id = ? AND doctor_id = ? AND status = 'booked'
-    ''', (appointment_id, doctor['id'])).fetchone()
+    appointment = Appointment.query.filter(
+        Appointment.id == appointment_id,
+        Appointment.doctor_id == doctor.id,
+        Appointment.status == 'booked'
+    ).first()
     
     if not appointment:
         flash('Appointment not found or you do not have permission to cancel it', 'error')
-        conn.close()
         return redirect(url_for('doctor_dashboard'))
     
-    conn.execute('UPDATE appointments SET status = ? WHERE id = ?', ('cancelled', appointment_id))
-    conn.commit()
-    conn.close()
+    appointment.status = 'cancelled'
+    db.session.commit()
     
     flash('Appointment cancelled successfully!', 'success')
     return redirect(url_for('doctor_dashboard'))
@@ -663,14 +730,7 @@ def doctor_cancel_appointment(appointment_id):
 @login_required
 @role_required(['doctor'])
 def doctor_availability():
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
@@ -699,46 +759,36 @@ def doctor_availability():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            conn.close()
             # Convert stored days string to list for the template
-            available_days = doctor['availability_days'].split(',') if doctor['availability_days'] else []
+            available_days = doctor.availability_days.split(',') if doctor.availability_days else []
             # Default days if none are set
             if not available_days or available_days == ['']:
                 available_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
             return render_template('doctor_availability.html', 
                                  doctor=doctor, 
                                  available_days=available_days,
-                                 availability_hours=doctor['availability_hours'])
+                                 availability_hours=doctor.availability_hours)
         
         # Convert list of days to comma-separated string
         days_str = ','.join(sanitized_days) if sanitized_days else ''
         
-        try:
-            # Update doctor availability
-            conn.execute('UPDATE doctors SET availability_days = ?, availability_hours = ? WHERE id = ?',
-                        (days_str, availability_hours, doctor['id']))
-            conn.commit()
-            flash('Availability updated successfully!', 'success')
-            return redirect(url_for('doctor_availability'))
-        except sqlite3.Error as e:
-            flash('An error occurred while updating availability', 'error')
-            conn.rollback()
-        finally:
-            conn.close()
+        doctor.availability_days = days_str
+        doctor.availability_hours = availability_hours
+        db.session.commit()
+        flash('Availability updated successfully!', 'success')
+        return redirect(url_for('doctor_availability'))
     else:
-        conn.close()
-    
-    # Convert stored days string to list for the template
-    available_days = doctor['availability_days'].split(',') if doctor['availability_days'] else []
-    
-    # Default days if none are set
-    if not available_days or available_days == ['']:
-        available_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    
-    return render_template('doctor_availability.html', 
-                         doctor=doctor, 
-                         available_days=available_days,
-                         availability_hours=doctor['availability_hours'])
+        # Convert stored days string to list for the template
+        available_days = doctor.availability_days.split(',') if doctor.availability_days else []
+        
+        # Default days if none are set
+        if not available_days or available_days == ['']:
+            available_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        
+        return render_template('doctor_availability.html', 
+                             doctor=doctor, 
+                             available_days=available_days,
+                             availability_hours=doctor.availability_hours)
 
 
 @app.route('/doctor/advanced-availability', methods=['GET', 'POST'])
@@ -747,14 +797,7 @@ def doctor_availability():
 def advanced_doctor_availability():
     from datetime import datetime, timedelta, date
     
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
@@ -765,10 +808,10 @@ def advanced_doctor_availability():
     
     # Get existing availability slots for this doctor
     availability_slots = {}
-    if doctor['availability_slots']:
+    if doctor.availability_slots:
         import json
         try:
-            availability_slots = json.loads(doctor['availability_slots'])
+            availability_slots = json.loads(doctor.availability_slots)
         except:
             availability_slots = {}
     
@@ -810,14 +853,15 @@ def advanced_doctor_availability():
             evening_key = f'availability_{date_str}_evening'
             
             # Get existing appointments for this date to mark slots as booked
-            appointments = conn.execute('''
-                SELECT appointment_time FROM appointments 
-                WHERE doctor_id = ? AND appointment_date = ? AND status = 'booked'
-            ''', (doctor['id'], date_str)).fetchall()
+            appointments = Appointment.query.filter(
+                Appointment.doctor_id == doctor.id,
+                Appointment.appointment_date == date_str,
+                Appointment.status == 'booked'
+            ).all()
             
             booked_slots = set()
             for appt in appointments:
-                time_str = appt['appointment_time']
+                time_str = appt.appointment_time
                 if '09:00' <= time_str <= '12:00':
                     booked_slots.add('morning')
                 elif '12:00' <= time_str <= '15:00':
@@ -851,61 +895,42 @@ def advanced_doctor_availability():
         import json
         slots_json = json.dumps(new_availability_slots)
         
-        try:
-            # Update doctor availability slots
-            conn.execute('UPDATE doctors SET availability_slots = ? WHERE id = ?',
-                        (slots_json, doctor['id']))
-            conn.commit()
-            flash('Advanced availability updated successfully!', 'success')
-            return redirect(url_for('advanced_doctor_availability'))
-        except sqlite3.Error as e:
-            flash('An error occurred while updating availability', 'error')
-            conn.rollback()
-        finally:
-            conn.close()
+        doctor.availability_slots = slots_json
+        db.session.commit()
+        flash('Advanced availability updated successfully!', 'success')
+        return redirect(url_for('advanced_doctor_availability'))
     else:
-        conn.close()
-    
-    # Convert stored days string to list for the template
-    available_days = doctor['availability_days'].split(',') if doctor['availability_days'] else []
-    
-    # Default days if none are set
-    if not available_days or available_days == ['']:
-        available_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    
-    return render_template('advanced_doctor_availability.html', 
-                         doctor=doctor, 
-                         dates_info=dates_info,
-                         available_days=available_days,
-                         availability_hours=doctor['availability_hours'])
+        # Convert stored days string to list for the template
+        available_days = doctor.availability_days.split(',') if doctor.availability_days else []
+        
+        # Default days if none are set
+        if not available_days or available_days == ['']:
+            available_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        
+        return render_template('advanced_doctor_availability.html', 
+                             doctor=doctor, 
+                             dates_info=dates_info,
+                             available_days=available_days,
+                             availability_hours=doctor.availability_hours)
 
 @app.route('/doctor/appointments')
 @login_required
 @role_required(['doctor'])
 def doctor_appointments():
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
         return redirect(url_for('logout'))
     
-    # Get all appointments for this doctor
-    appointments = conn.execute('''
-        SELECT a.*, p.name as patient_name, p.phone as patient_phone
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.id
-        WHERE a.doctor_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-    ''', (doctor['id'],)).fetchall()
-    
-    conn.close()
+    # Get all appointments for this doctor with patient information
+    appointments = db.session.query(
+        Appointment,
+        Patient.name.label('patient_name'),
+        Patient.phone.label('patient_phone')
+    ).join(Patient, Appointment.patient_id == Patient.id)\
+     .filter(Appointment.doctor_id == doctor.id)\
+     .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
     return render_template('doctor_appointments.html', 
                          doctor=doctor,
@@ -915,50 +940,34 @@ def doctor_appointments():
 @login_required
 @role_required(['doctor'])
 def doctor_patient_history(patient_id):
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
         return redirect(url_for('logout'))
     
     # Get patient details
-    patient = conn.execute('''
-        SELECT p.*, u.email FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.id = ?
-    ''', (patient_id,)).fetchone()
+    patient = Patient.query.join(User).filter(Patient.id == patient_id).first()
     
     if not patient:
         flash('Patient not found', 'error')
         return redirect(url_for('doctor_dashboard'))
     
     # Check if this patient has appointments with this doctor
-    appointment_check = conn.execute('''
-        SELECT COUNT(*) as count FROM appointments
-        WHERE patient_id = ? AND doctor_id = ?
-    ''', (patient_id, doctor['id'])).fetchone()
+    appointment_check = Appointment.query.filter(
+        Appointment.patient_id == patient_id,
+        Appointment.doctor_id == doctor.id
+    ).count()
     
-    if appointment_check['count'] == 0:
+    if appointment_check == 0:
         flash('This patient has no appointments with you', 'error')
         return redirect(url_for('doctor_dashboard'))
     
     # Get patient's treatment history with this doctor
-    treatments = conn.execute('''
-        SELECT t.*, a.appointment_date, a.appointment_time
-        FROM treatments t
-        JOIN appointments a ON t.appointment_id = a.id
-        WHERE a.patient_id = ? AND a.doctor_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-    ''', (patient_id, doctor['id'])).fetchall()
-    
-    conn.close()
+    treatments = Treatment.query.join(Appointment).filter(
+        Appointment.patient_id == patient_id,
+        Appointment.doctor_id == doctor.id
+    ).order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
     return render_template('doctor_patient_history.html', 
                          doctor=doctor,
@@ -970,46 +979,27 @@ def doctor_patient_history(patient_id):
 @login_required
 @role_required(['doctor'])
 def update_patient_history(appointment_id):
-    conn = get_db_connection()
-    
-    # Get doctor details
-    doctor = conn.execute('''
-        SELECT d.* FROM doctors d
-        JOIN users u ON d.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    doctor = Doctor.query.join(User).filter(User.id == session['user_id']).first()
     
     if not doctor:
         flash('Doctor profile not found', 'error')
         return redirect(url_for('logout'))
     
     # Get appointment details
-    appointment = conn.execute('''
-        SELECT a.*, p.name as patient_name, p.phone as patient_phone
-        FROM appointments a
-        JOIN patients p ON a.patient_id = p.id
-        WHERE a.id = ? AND a.doctor_id = ?
-    ''', (appointment_id, doctor['id'])).fetchone()
+    appointment = Appointment.query.join(Patient).filter(
+        Appointment.id == appointment_id,
+        Appointment.doctor_id == doctor.id
+    ).first()
     
     # Get treatment details if they exist
-    treatment = conn.execute('''
-        SELECT * FROM treatments WHERE appointment_id = ?
-    ''', (appointment_id,)).fetchone()
-    
-    # Merge treatment data with appointment if it exists
-    if treatment:
-        appointment_dict = dict(appointment)
-        appointment_dict.update(dict(treatment))
-        appointment = appointment_dict
+    treatment = Treatment.query.filter(Treatment.appointment_id == appointment_id).first()
     
     if not appointment:
         flash('Appointment not found or you do not have permission to access it', 'error')
         return redirect(url_for('doctor_dashboard'))
     
     # Get patient details
-    patient = conn.execute('''
-        SELECT * FROM patients WHERE id = ?
-    ''', (appointment['patient_id'],)).fetchone()
+    patient = Patient.query.filter(Patient.id == appointment.patient_id).first()
     
     if request.method == 'POST':
         appointment_date = request.form['appointment_date']
@@ -1017,66 +1007,73 @@ def update_patient_history(appointment_id):
         prescription = request.form['prescription']
         treatment_notes = request.form['treatment_notes']
         
-        try:
-            # Update appointment
-            conn.execute('UPDATE appointments SET appointment_date = ? WHERE id = ?', 
-                        (appointment_date, appointment_id))
-            
-            # Insert or update treatment
-            conn.execute('''INSERT OR REPLACE INTO treatments 
-                            (appointment_id, diagnosis, prescription, treatment_notes) 
-                            VALUES (?, ?, ?, ?)''', 
-                        (appointment_id, diagnosis, prescription, treatment_notes))
-            
-            conn.commit()
-            flash('Patient history updated successfully!', 'success')
-            return redirect(url_for('doctor_dashboard'))
-        except sqlite3.Error as e:
-            flash('An error occurred while updating patient history', 'error')
-            conn.rollback()
-        finally:
-            conn.close()
-    else:
-        conn.close()
+        # Convert string date to Python date object
+        from datetime import datetime
+        appointment_date_obj = datetime.strptime(appointment_date, '%Y-%m-%d').date()
+        
+        # Update appointment
+        appointment.appointment_date = appointment_date_obj
+        db.session.commit()
+        
+        if treatment:
+            treatment.diagnosis = diagnosis
+            treatment.prescription = prescription
+            treatment.treatment_notes = treatment_notes
+            db.session.commit()
+        else:
+            treatment = Treatment(appointment_id=appointment_id, diagnosis=diagnosis, prescription=prescription, treatment_notes=treatment_notes)
+            db.session.add(treatment)
+            db.session.commit()
+        
+        flash('Patient history updated successfully!', 'success')
+        return redirect(url_for('doctor_dashboard'))
+    
+    # Prepare data for the template
+    # Combine appointment and treatment data for display
+    appointment_data = {
+        'id': appointment.id,
+        'patient_id': appointment.patient_id,
+        'doctor_id': appointment.doctor_id,
+        'appointment_date': appointment.appointment_date,
+        'appointment_time': appointment.appointment_time,
+        'status': appointment.status,
+        'created_at': appointment.created_at,
+        'diagnosis': treatment.diagnosis if treatment else '',
+        'prescription': treatment.prescription if treatment else '',
+        'treatment_notes': treatment.treatment_notes if treatment else ''
+    }
     
     return render_template('update_patient_history.html', 
                          doctor=doctor,
                          patient=patient,
-                         appointment=appointment)
+                         appointment=appointment_data)
 
 # Patient routes
 @app.route('/patient/dashboard')
 @login_required
 @role_required(['patient'])
 def patient_dashboard():
-    conn = get_db_connection()
-    
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
         return redirect(url_for('logout'))
     
-    departments = conn.execute('SELECT * FROM departments').fetchall()
-    doctors = conn.execute('SELECT * FROM doctors').fetchall()
+    departments = Department.query.all()
+    doctors = Doctor.query.all()
     
-    appointments = conn.execute('''
-        SELECT a.*, d.name as doctor_name, d.specialization
-        FROM appointments a
-        JOIN doctors d ON a.doctor_id = d.id
-        WHERE a.patient_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-    ''', (patient['id'],)).fetchall()
+    # Get appointments with doctor information
+    appointments = db.session.query(
+        Appointment,
+        Doctor.name.label('doctor_name'),
+        Doctor.specialization.label('specialization')
+    ).join(Doctor, Appointment.doctor_id == Doctor.id)\
+     .filter(Appointment.patient_id == patient.id)\
+     .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
     # Get today's date for consistent date handling
     from datetime import date
     today_date = date.today().strftime('%Y-%m-%d')
-    
-    conn.close()
     
     return render_template('patient_dashboard.html', 
                          patient=patient,
@@ -1093,38 +1090,36 @@ def book_appointment():
     appointment_date = request.form['appointment_date']
     appointment_time = request.form['appointment_time']
     
-    conn = get_db_connection()
+    # Convert string date to Python date object
+    from datetime import datetime
+    appointment_date_obj = datetime.strptime(appointment_date, '%Y-%m-%d').date()
     
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
-    existing = conn.execute('''
-        SELECT * FROM appointments 
-        WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status = 'booked'
-    ''', (doctor_id, appointment_date, appointment_time)).fetchone()
+    existing = Appointment.query.filter(
+        Appointment.doctor_id == doctor_id,
+        Appointment.appointment_date == appointment_date_obj,
+        Appointment.appointment_time == appointment_time,
+        Appointment.status == 'booked'
+    ).first()
     
     if existing:
         flash('This time slot is already booked. Please choose another time.', 'error')
     else:
-        conn.execute('''INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time) 
-                        VALUES (?, ?, ?, ?)''', (patient['id'], doctor_id, appointment_date, appointment_time))
-        conn.commit()
+        appointment = Appointment(patient_id=patient.id, doctor_id=doctor_id, appointment_date=appointment_date_obj, appointment_time=appointment_time)
+        db.session.add(appointment)
+        db.session.commit()
         flash('Appointment booked successfully!', 'success')
     
-    conn.close()
     return redirect(url_for('patient_dashboard'))
 
 @app.route('/patient/appointment/<int:appointment_id>/cancel', methods=['POST'])
 @login_required
 @role_required(['patient'])
 def cancel_appointment(appointment_id):
-    conn = get_db_connection()
-    conn.execute('UPDATE appointments SET status = ? WHERE id = ?', ('cancelled', appointment_id))
-    conn.commit()
-    conn.close()
+    appointment = Appointment.query.filter(Appointment.id == appointment_id).first()
+    appointment.status = 'cancelled'
+    db.session.commit()
     
     flash('Appointment cancelled successfully!', 'success')
     return redirect(url_for('patient_dashboard'))
@@ -1134,34 +1129,24 @@ def cancel_appointment(appointment_id):
 @login_required
 @role_required(['patient'])
 def reschedule_appointment(appointment_id):
-    conn = get_db_connection()
-    
-    # Get patient details
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
-        conn.close()
         return redirect(url_for('logout'))
     
     # Get the appointment details
-    appointment = conn.execute('''
-        SELECT a.*, d.name as doctor_name, d.specialization, d.id as doctor_id
-        FROM appointments a
-        JOIN doctors d ON a.doctor_id = d.id
-        WHERE a.id = ? AND a.patient_id = ? AND a.status = 'booked'
-    ''', (appointment_id, patient['id'])).fetchone()
+    appointment = Appointment.query.join(Doctor).filter(
+        Appointment.id == appointment_id,
+        Appointment.patient_id == patient.id,
+        Appointment.status == 'booked'
+    ).first()
     
     if not appointment:
         flash('Appointment not found or cannot be rescheduled', 'error')
-        conn.close()
         return redirect(url_for('patient_dashboard'))
     
-    doctors = conn.execute('SELECT * FROM doctors').fetchall()
+    doctors = Doctor.query.all()
     
     if request.method == 'POST':
         doctor_id = request.form['doctor_id']
@@ -1169,36 +1154,38 @@ def reschedule_appointment(appointment_id):
         appointment_time = request.form['appointment_time']
         
         # Verify doctor exists
-        doctor = conn.execute('SELECT * FROM doctors WHERE id = ?', (doctor_id,)).fetchone()
+        doctor = Doctor.query.filter(Doctor.id == doctor_id).first()
         if not doctor:
             flash('Selected doctor not found', 'error')
-            conn.close()
             return redirect(url_for('reschedule_appointment', appointment_id=appointment_id))
         
         # Check if the time slot is available
-        existing = conn.execute('''
-            SELECT * FROM appointments 
-            WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status = 'booked' AND id != ?
-        ''', (doctor_id, appointment_date, appointment_time, appointment_id)).fetchone()
+        # Convert string date to Python date object for comparison
+        from datetime import datetime
+        appointment_date_obj = datetime.strptime(appointment_date, '%Y-%m-%d').date()
+        
+        existing = Appointment.query.filter(
+            Appointment.doctor_id == doctor_id,
+            Appointment.appointment_date == appointment_date_obj,
+            Appointment.appointment_time == appointment_time,
+            Appointment.status == 'booked',
+            Appointment.id != appointment_id
+        ).first()
         
         if existing:
             flash('This time slot is already booked. Please choose another time.', 'error')
         else:
-            # Update the appointment
-            conn.execute('''UPDATE appointments 
-                            SET doctor_id = ?, appointment_date = ?, appointment_time = ? 
-                            WHERE id = ?''', 
-                        (doctor_id, appointment_date, appointment_time, appointment_id))
-            conn.commit()
+            appointment.doctor_id = doctor_id
+            # Convert string date to Python date object
+            appointment.appointment_date = appointment_date_obj
+            appointment.appointment_time = appointment_time
+            db.session.commit()
             flash('Appointment rescheduled successfully!', 'success')
-            conn.close()
             return redirect(url_for('patient_dashboard'))
     
     # Get today's date for consistent date handling
     from datetime import date
     today_date = date.today().strftime('%Y-%m-%d')
-    
-    conn.close()
     
     return render_template('reschedule_appointment.html', 
                          patient=patient,
@@ -1210,15 +1197,7 @@ def reschedule_appointment(appointment_id):
 @login_required
 @role_required(['patient'])
 def patient_profile():
-    conn = get_db_connection()
-    
-    # Get patient details
-    patient = conn.execute('''
-        SELECT p.*, u.username, u.email 
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
@@ -1250,12 +1229,11 @@ def patient_profile():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            conn.close()
             # Pass the form data back to the template
             patient_data = {
-                'id': patient['id'],
-                'user_id': patient['user_id'],
-                'username': patient['username'],
+                'id': patient.id,
+                'user_id': patient.user_id,
+                'username': patient.user.username,
                 'email': email,
                 'name': name,
                 'phone': phone,
@@ -1263,22 +1241,13 @@ def patient_profile():
             }
             return render_template('patient_profile.html', patient=patient_data)
         
-        try:
-            # Update patient and user details
-            conn.execute('UPDATE patients SET name = ?, phone = ?, address = ? WHERE id = ?',
-                        (name, phone, address, patient['id']))
-            conn.execute('UPDATE users SET email = ? WHERE id = ?',
-                        (email, session['user_id']))
-            conn.commit()
-            flash('Profile updated successfully!', 'success')
-            return redirect(url_for('patient_profile'))
-        except sqlite3.Error as e:
-            flash('An error occurred while updating the profile', 'error')
-            conn.rollback()
-        finally:
-            conn.close()
-    else:
-        conn.close()
+        patient.name = name
+        patient.phone = phone
+        patient.address = address
+        patient.user.email = email
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('patient_profile'))
     
     return render_template('patient_profile.html', patient=patient)
 
@@ -1286,31 +1255,26 @@ def patient_profile():
 @login_required
 @role_required(['patient'])
 def patient_history():
-    conn = get_db_connection()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
-    
-    treatments = conn.execute('''
-        SELECT t.*, a.appointment_date, a.appointment_time, d.name as doctor_name, d.specialization
-        FROM treatments t
-        JOIN appointments a ON t.appointment_id = a.id
-        JOIN doctors d ON a.doctor_id = d.id
-        WHERE a.patient_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-    ''', (patient['id'],)).fetchall()
+    treatments = Treatment.query.join(Appointment).join(Doctor).filter(
+        Appointment.patient_id == patient.id
+    ).order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
     # Add serial numbers to treatments
     treatments_with_serial = []
     for i, treatment in enumerate(treatments, 1):
-        treatment_dict = dict(treatment)
-        treatment_dict['serial_no'] = i
+        # Create a dictionary with treatment data
+        treatment_dict = {
+            'id': treatment.id,
+            'appointment_id': treatment.appointment_id,
+            'diagnosis': treatment.diagnosis,
+            'prescription': treatment.prescription,
+            'treatment_notes': treatment.treatment_notes,
+            'created_at': treatment.created_at,
+            'serial_no': i
+        }
         treatments_with_serial.append(treatment_dict)
-    
-    conn.close()
     
     return render_template('patient_history.html', treatments=treatments_with_serial)
 
@@ -1319,20 +1283,13 @@ def patient_history():
 @login_required
 @role_required(['patient'])
 def patient_departments():
-    conn = get_db_connection()
-    
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
         return redirect(url_for('logout'))
     
-    departments = conn.execute('SELECT * FROM departments').fetchall()
-    conn.close()
+    departments = Department.query.all()
     
     return render_template('departments.html', 
                          patient=patient,
@@ -1343,29 +1300,21 @@ def patient_departments():
 @login_required
 @role_required(['patient'])
 def department_details(department_id):
-    conn = get_db_connection()
-    
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
         return redirect(url_for('logout'))
     
     # Get department details
-    department = conn.execute('SELECT * FROM departments WHERE id = ?', (department_id,)).fetchone()
+    department = Department.query.filter(Department.id == department_id).first()
     
     if not department:
         flash('Department not found', 'error')
         return redirect(url_for('patient_departments'))
     
     # Get doctors in this department
-    doctors = conn.execute('SELECT * FROM doctors WHERE specialization = ?', (department['name'],)).fetchall()
-    
-    conn.close()
+    doctors = Doctor.query.filter(Doctor.specialization == department.name).all()
     
     return render_template('department_details.html', 
                          patient=patient,
@@ -1377,20 +1326,14 @@ def department_details(department_id):
 @login_required
 @role_required(['patient'])
 def doctor_availability_patient_view(doctor_id):
-    conn = get_db_connection()
-    
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
         return redirect(url_for('logout'))
     
     # Get doctor details
-    doctor = conn.execute('SELECT * FROM doctors WHERE id = ?', (doctor_id,)).fetchone()
+    doctor = Doctor.query.filter(Doctor.id == doctor_id).first()
     
     if not doctor:
         flash('Doctor not found', 'error')
@@ -1398,10 +1341,10 @@ def doctor_availability_patient_view(doctor_id):
     
     # Get doctor's availability slots
     availability_slots = {}
-    if doctor['availability_slots']:
+    if doctor.availability_slots:
         import json
         try:
-            availability_slots = json.loads(doctor['availability_slots'])
+            availability_slots = json.loads(doctor.availability_slots)
         except:
             availability_slots = {}
     
@@ -1430,8 +1373,6 @@ def doctor_availability_patient_view(doctor_id):
                              ('booked' if date_str in availability_slots and 'evening' in availability_slots[date_str] and availability_slots[date_str]['evening'] == 'booked' else 'unavailable')
         })
     
-    conn.close()
-    
     return render_template('doctor_availability_patient.html', 
                          patient=patient,
                          doctor=doctor,
@@ -1442,26 +1383,18 @@ def doctor_availability_patient_view(doctor_id):
 @login_required
 @role_required(['patient'])
 def doctor_profile_patient_view(doctor_id):
-    conn = get_db_connection()
-    
-    patient = conn.execute('''
-        SELECT p.* FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE u.id = ?
-    ''', (session['user_id'],)).fetchone()
+    patient = Patient.query.join(User).filter(User.id == session['user_id']).first()
     
     if not patient:
         flash('Patient profile not found', 'error')
         return redirect(url_for('logout'))
     
     # Get doctor details
-    doctor = conn.execute('SELECT * FROM doctors WHERE id = ?', (doctor_id,)).fetchone()
+    doctor = Doctor.query.filter(Doctor.id == doctor_id).first()
     
     if not doctor:
         flash('Doctor not found', 'error')
         return redirect(url_for('patient_departments'))
-    
-    conn.close()
     
     return render_template('doctor_profile_patient.html', 
                          patient=patient,
@@ -1472,42 +1405,53 @@ def doctor_profile_patient_view(doctor_id):
 @login_required
 @role_required(['admin'])
 def admin_patient_history(patient_id):
-    conn = get_db_connection()
-    
-    # Get patient details
-    patient = conn.execute('''
-        SELECT p.*, u.username, u.email, u.created_at
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.id = ?
-    ''', (patient_id,)).fetchone()
+    # Get patient details with user information
+    patient = Patient.query.join(User).filter(Patient.id == patient_id).first()
     
     if not patient:
         flash('Patient not found', 'error')
         return redirect(url_for('admin_dashboard'))
     
-    # Get patient's complete treatment history
-    treatments = conn.execute('''
-        SELECT t.*, a.appointment_date, a.appointment_time, d.name as doctor_name, d.specialization
-        FROM treatments t
-        JOIN appointments a ON t.appointment_id = a.id
-        JOIN doctors d ON a.doctor_id = d.id
-        WHERE a.patient_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-    ''', (patient_id,)).fetchall()
+    # Get patient's complete treatment history with doctor information
+    treatments = db.session.query(
+        Treatment,
+        Appointment.appointment_date,
+        Appointment.appointment_time,
+        Doctor.name.label('doctor_name'),
+        Doctor.specialization.label('specialization')
+    ).join(Appointment, Treatment.appointment_id == Appointment.id)\
+     .join(Doctor, Appointment.doctor_id == Doctor.id)\
+     .filter(Appointment.patient_id == patient_id)\
+     .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
-    # Add serial numbers to treatments
-    treatments_with_serial = []
-    for i, treatment in enumerate(treatments, 1):
-        treatment_dict = dict(treatment)
-        treatment_dict['serial_no'] = i
-        treatments_with_serial.append(treatment_dict)
-    
-    conn.close()
+    # Add serial numbers and appointment info to treatments
+    treatments_with_info = []
+    for i, treatment_tuple in enumerate(treatments, 1):
+        treatment = treatment_tuple[0]
+        appointment_date = treatment_tuple[1]
+        appointment_time = treatment_tuple[2]
+        doctor_name = treatment_tuple[3]
+        specialization = treatment_tuple[4]
+        
+        # Create a dictionary with treatment data
+        treatment_dict = {
+            'id': treatment.id,
+            'appointment_id': treatment.appointment_id,
+            'diagnosis': treatment.diagnosis,
+            'prescription': treatment.prescription,
+            'treatment_notes': treatment.treatment_notes,
+            'created_at': treatment.created_at,
+            'serial_no': i,
+            'appointment_date': appointment_date,
+            'appointment_time': appointment_time,
+            'doctor_name': doctor_name,
+            'specialization': specialization
+        }
+        treatments_with_info.append(treatment_dict)
     
     return render_template('admin_patient_history.html', 
                          patient=patient,
-                         treatments=treatments_with_serial)
+                         treatments=treatments_with_info)
 
 if __name__ == '__main__':
     init_db()

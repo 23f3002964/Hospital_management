@@ -77,7 +77,7 @@
                                     {{ session.username[0].upper() }}
                                 </div>
                                 <small class="text-muted">
-                                    Treated on {{ treatment.created_at[:10] if treatment.created_at else treatment.appointment_date }}
+                                    Treated on {{ treatment.created_at.strftime('%Y-%m-%d') if treatment.created_at else treatment.appointment_date }}
                                 </small>
                             </div>
                         </div>

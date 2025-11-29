@@ -36,7 +36,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for appointment in appointments %}
+                            {% for appointment_tuple in appointments %}
+                            {% set appointment = appointment_tuple[0] %}
+                            {% set patient_name = appointment_tuple[1] %}
+                            {% set patient_phone = appointment_tuple[2] %}
                             <tr>
                                 <td>{{ appointment.appointment_date }}</td>
                                 <td>
@@ -45,12 +48,12 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
-                                            {{ appointment.patient_name[0] }}
+                                            {{ patient_name[0] }}
                                         </div>
-                                        {{ appointment.patient_name }}
+                                        {{ patient_name }}
                                     </div>
                                 </td>
-                                <td>{{ appointment.patient_phone or '-' }}</td>
+                                <td>{{ patient_phone or '-' }}</td>
                                 <td>
                                     <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'secondary' }}">
                                         {{ appointment.status.title() }}
@@ -58,7 +61,7 @@
                                 </td>
                                 <td>
                                     {% if appointment.status == 'booked' %}
-                                    <a href="{{ url_for('update_patient_history', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">
+                                    <a href="/doctor/appointment/{{ appointment.id }}/update-history" class="btn btn-sm btn-primary">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ appointment.id }}">
@@ -80,7 +83,7 @@
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <h6>Patient: {{ appointment.patient_name }}</h6>
+                                                        <h6>Patient: {{ patient_name }}</h6>
                                                         <hr>
                                                         <div class="mb-3">
                                                             <label class="form-label">Diagnosis</label>

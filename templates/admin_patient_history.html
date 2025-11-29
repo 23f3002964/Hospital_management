@@ -31,12 +31,12 @@
                             </div>
                         </h5>
                         <p class="mb-1"><i class="bi bi-telephone"></i> {{ patient.phone or 'Not provided' }}</p>
-                        <p class="mb-1"><i class="bi bi-envelope"></i> {{ patient.email or 'Not provided' }}</p>
+                        <p class="mb-1"><i class="bi bi-envelope"></i> {{ patient.user.email if patient.user else 'Not provided' }}</p>
                         <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ patient.address or 'Not provided' }}</p>
                     </div>
                     <div class="col-md-4 text-md-end">
-                        <p class="mb-1"><i class="bi bi-person"></i> Username: {{ patient.username }}</p>
-                        <p class="mb-1"><i class="bi bi-calendar"></i> Registered: {{ patient.created_at[:10] if patient.created_at else 'Unknown' }}</p>
+                        <p class="mb-1"><i class="bi bi-person"></i> Username: {{ patient.user.username if patient.user else 'Unknown' }}</p>
+                        <p class="mb-1"><i class="bi bi-calendar"></i> Registered: {{ patient.created_at.strftime('%Y-%m-%d') if patient.created_at else 'Unknown' }}</p>
                     </div>
                 </div>
             </div>

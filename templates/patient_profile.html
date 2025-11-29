@@ -26,7 +26,7 @@
                 <form method="POST">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" value="{{ patient.username }}" disabled>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ patient.user.username if patient.user else '' }}" disabled>
                         <div class="form-text">Username cannot be changed</div>
                     </div>
                     
@@ -38,7 +38,7 @@
                     
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ patient.email }}" required>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ patient.user.email if patient.user else '' }}" required>
                         <div id="email_error" class="text-danger small" style="display: none;"></div>
                     </div>
                     

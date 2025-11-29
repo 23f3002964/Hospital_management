@@ -3,56 +3,104 @@
 {% block title %}Login - Hospital Management System{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
-                    <i class="bi bi-hospital display-4 text-primary"></i>
-                    <h2 class="mt-2">Hospital Management</h2>
-                    <p class="text-muted">Please sign in to your account</p>
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-lg-5 col-md-7">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="rounded-circle bg-white d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                        <i class="bi bi-hospital text-primary fs-1"></i>
+                    </div>
                 </div>
-                
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                <h2 class="fw-bold mb-1">Hospital Management</h2>
+                <p class="mb-0 opacity-75">Sign in to your account</p>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="username" class="form-label fw-semibold">Username</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-person text-primary"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control form-control-lg border-start-0" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Enter your username"
+                                   required>
                         </div>
-                        <div id="username_error" class="text-danger small" style="display: none;"></div>
+                        <div id="username_error" class="text-danger small mt-1" style="display: none;"></div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-lock text-primary"></i>
+                            </span>
+                            <input type="password" 
+                                   class="form-control form-control-lg border-start-0" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Enter your password"
+                                   required>
                         </div>
-                        <div id="password_error" class="text-danger small" style="display: none;"></div>
+                        <div id="password_error" class="text-danger small mt-1" style="display: none;"></div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100 mb-3">
-                        <i class="bi bi-box-arrow-in-right"></i> Login
-                    </button>
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 fw-semibold">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </div>
                 </form>
                 
                 <div class="text-center">
-                    <p class="mb-0">Don't have an account? <a href="{{ url_for('register') }}">Register as Patient</a></p>
-                </div>
-                
-                <hr>
-                <div class="text-center">
-                    <small class="text-muted">
-                        <strong>Demo Credentials:</strong><br>
-                        Admin: admin / admin<br>
-                        Doctor: dr_rajesh_sharma / password123<br>
-                        &nbsp;&nbsp;&nbsp;or dr_priya_patel / password123<br>
-                        Patient: patient1 / password123
-                    </small>
+                    <p class="mb-0">Don't have an account? 
+                        <a href="{{ url_for('register') }}" class="text-decoration-none fw-medium">Register as Patient</a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    
+    .card {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .rounded-circle {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
 {% endblock %}
