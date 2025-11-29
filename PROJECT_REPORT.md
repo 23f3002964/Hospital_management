@@ -1,3 +1,9 @@
+# Author
+ ### Name: Aditya Raj
+ ### Roll No: 23f3002964
+ ### Email: 23f3002964@ds.study.iitm.ac.in
+ 
+
 # Hospital Management System - Project Report
 
 ## 1. Project Details
@@ -43,6 +49,7 @@ We developed a web-based hospital management system using the Flask framework in
 - **blinker 1.6.3**: Signal/event dispatching
 
 ## 3. ER Diagram of Database
+ https://drive.google.com/drive/folders/1KA68K-JBuVjftazCqnVpR9yQJbKR9_s1?usp=sharing
 
 ```mermaid
 erDiagram
@@ -169,4 +176,5 @@ erDiagram
 - Phone number format validation
 - Password strength validation
 
-This hospital management system provides a comprehensive solution for managing healthcare facilities with a focus on security, usability, and efficient data management.
+### Video link : 
+
