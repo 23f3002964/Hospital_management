@@ -113,15 +113,6 @@ Install the required Python packages:
 ```bash
 pip install -r requirements.txt
 ```
-
-### Environment Setup
-
-The application uses a secret key for session management which is hardcoded in `app.py`. For production, you should use environment variables:
-
-```python
-app.secret_key = 'your-secret-key-here'
-```
-
 ### Run/Start Commands
 
 To start the development server:
