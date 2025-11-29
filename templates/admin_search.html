@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-search"></i> Search Results
+            </h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <input type="hidden" name="type" value="{{ search_type }}">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" name="q" placeholder="Enter search term..." value="{{ search_query or '' }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="type" class="form-select">
+                            <option value="doctors" {% if search_type == 'doctors' %}selected{% endif %}>Doctors</option>
+                            <option value="patients" {% if search_type == 'patients' %}selected{% endif %}>Patients</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if search_type == 'doctors' %}
+                        Doctors Matching "{{ search_query }}"
+                    {% else %}
+                        Patients Matching "{{ search_query }}"
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if results %}
+                    {% if search_type == 'doctors' %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Specialization</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Username</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doctor in results %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                    {{ doctor.name[0] }}
+                                                </div>
+                                                {{ doctor.name }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ doctor.specialization }}</span>
+                                        </td>
+                                        <td>{{ doctor.phone or '-' }}</td>
+                                        <td>{{ doctor.email }}</td>
+                                        <td>{{ doctor.username }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Email</th>
+                                        <th>Address</th>
+                                        <th>Username</th>
+                                        <th>Registered</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for patient in results %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                    {{ patient.name[0] }}
+                                                </div>
+                                                {{ patient.name }}
+                                            </div>
+                                        </td>
+                                        <td>{{ patient.phone or '-' }}</td>
+                                        <td>{{ patient.email }}</td>
+                                        <td>{{ patient.address or '-' }}</td>
+                                        <td>{{ patient.username }}</td>
+                                        <td>{{ patient.created_at[:10] if patient.created_at else '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-search display-1 text-muted"></i>
+                        <h4 class="text-muted">No results found</h4>
+                        <p class="text-muted">No {{ search_type }} matched your search for "{{ search_query }}". Try different search terms.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

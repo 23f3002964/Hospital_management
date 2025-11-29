@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Update Patient History - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-clipboard-plus"></i> Update Patient History
+            </h1>
+            <a href="{{ url_for('doctor_appointments') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Appointments
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-title text-primary">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    {{ patient.name[0] }}
+                                </div>
+                                {{ patient.name }}
+                            </div>
+                        </h5>
+                        <p class="mb-1"><i class="bi bi-telephone"></i> {{ patient.phone or 'Not provided' }}</p>
+
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h5 class="card-title text-primary">
+                            <div class="d-flex align-items-center justify-content-md-end">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    {{ doctor.name[0] }}
+                                </div>
+                                {{ doctor.name }}
+                            </div>
+                        </h5>
+                        <p class="mb-1"><i class="bi bi-tag"></i> {{ doctor.specialization }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Treatment Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="visit_type" class="form-label">Visit Type</label>
+                            <select class="form-select" id="visit_type" name="visit_type" required>
+                                <option value="">Select Visit Type</option>
+                                <option value="in-person">In-Person</option>
+                                <option value="online">Online</option>
+                                <option value="home-visit">Home Visit</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="appointment_date" class="form-label">Appointment Date</label>
+                            <input type="date" class="form-control" id="appointment_date" name="appointment_date" value="{{ appointment.appointment_date if appointment else '' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="diagnosis" class="form-label">Diagnosis</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required>{{ appointment.diagnosis if appointment.diagnosis else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prescription" class="form-label">Prescription</label>
+                        <textarea class="form-control" id="prescription" name="prescription" rows="3" required>{{ appointment.prescription if appointment.prescription else '' }}</textarea>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Medicines</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="medicinesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Medicine</th>
+                                            <th>Morning</th>
+                                            <th>Afternoon</th>
+                                            <th>Evening</th>
+                                            <th>Duration</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><input type="text" class="form-control" name="medicine_name[]" placeholder="Medicine name"></td>
+                                            <td><input type="text" class="form-control" name="morning_dosage[]" placeholder="e.g., 1"></td>
+                                            <td><input type="text" class="form-control" name="afternoon_dosage[]" placeholder="e.g., 0"></td>
+                                            <td><input type="text" class="form-control" name="evening_dosage[]" placeholder="e.g., 1"></td>
+                                            <td><input type="text" class="form-control" name="duration[]" placeholder="e.g., 7 days"></td>
+                                            <td><button type="button" class="btn btn-danger btn-sm remove-medicine">Remove</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary" id="addMedicineRow">
+                                <i class="bi bi-plus-circle"></i> Add Medicine
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="treatment_notes" class="form-label">Treatment Notes</label>
+                        <textarea class="form-control" id="treatment_notes" name="treatment_notes" rows="2">{{ appointment.treatment_notes if appointment.treatment_notes else '' }}</textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Save Treatment Details
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add medicine row functionality
+        document.getElementById('addMedicineRow').addEventListener('click', function() {
+            const tableBody = document.querySelector('#medicinesTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="form-control" name="medicine_name[]" placeholder="Medicine name"></td>
+                <td><input type="text" class="form-control" name="morning_dosage[]" placeholder="e.g., 1"></td>
+                <td><input type="text" class="form-control" name="afternoon_dosage[]" placeholder="e.g., 0"></td>
+                <td><input type="text" class="form-control" name="evening_dosage[]" placeholder="e.g., 1"></td>
+                <td><input type="text" class="form-control" name="duration[]" placeholder="e.g., 7 days"></td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-medicine">Remove</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        });
+
+        // Remove medicine row functionality
+        document.querySelector('#medicinesTable tbody').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-medicine')) {
+                if (document.querySelectorAll('#medicinesTable tbody tr').length > 1) {
+                    e.target.closest('tr').remove();
+                } else {
+                    alert('You need at least one medicine row.');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

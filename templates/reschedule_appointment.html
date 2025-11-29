@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Reschedule Appointment - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-calendar-check"></i> Reschedule Appointment
+            </h1>
+            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Appointment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Doctor</h6>
+                        <p>{{ appointment.doctor_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Specialization</h6>
+                        <p>{{ appointment.specialization }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Current Date</h6>
+                        <p>{{ appointment.appointment_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Current Time</h6>
+                        <p>{{ appointment.appointment_time }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Reschedule Appointment</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="doctor_id" class="form-label">Select Doctor</label>
+                        <select class="form-select" id="doctor_id" name="doctor_id" required>
+                            <option value="">Choose a doctor...</option>
+                            {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}" {% if doctor.id == appointment.doctor_id %}selected{% endif %}>
+                                {{ doctor.name }} - {{ doctor.specialization }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="appointment_date" class="form-label">New Appointment Date</label>
+                        <input type="date" class="form-control" id="appointment_date" name="appointment_date" 
+                               min="{{ today_date }}" value="{{ appointment.appointment_date }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="appointment_time" class="form-label">New Appointment Time</label>
+                        <select class="form-select" id="appointment_time" name="appointment_time" required>
+                            <option value="">Select time...</option>
+                            <option value="09:00" {% if appointment.appointment_time == '09:00' %}selected{% endif %}>09:00 AM</option>
+                            <option value="09:30" {% if appointment.appointment_time == '09:30' %}selected{% endif %}>09:30 AM</option>
+                            <option value="10:00" {% if appointment.appointment_time == '10:00' %}selected{% endif %}>10:00 AM</option>
+                            <option value="10:30" {% if appointment.appointment_time == '10:30' %}selected{% endif %}>10:30 AM</option>
+                            <option value="11:00" {% if appointment.appointment_time == '11:00' %}selected{% endif %}>11:00 AM</option>
+                            <option value="11:30" {% if appointment.appointment_time == '11:30' %}selected{% endif %}>11:30 AM</option>
+                            <option value="12:00" {% if appointment.appointment_time == '12:00' %}selected{% endif %}>12:00 PM</option>
+                            <option value="14:00" {% if appointment.appointment_time == '14:00' %}selected{% endif %}>02:00 PM</option>
+                            <option value="14:30" {% if appointment.appointment_time == '14:30' %}selected{% endif %}>02:30 PM</option>
+                            <option value="15:00" {% if appointment.appointment_time == '15:00' %}selected{% endif %}>03:00 PM</option>
+                            <option value="15:30" {% if appointment.appointment_time == '15:30' %}selected{% endif %}>03:30 PM</option>
+                            <option value="16:00" {% if appointment.appointment_time == '16:00' %}selected{% endif %}>04:00 PM</option>
+                            <option value="16:30" {% if appointment.appointment_time == '16:30' %}selected{% endif %}>04:30 PM</option>
+                            <option value="17:00" {% if appointment.appointment_time == '17:00' %}selected{% endif %}>05:00 PM</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-calendar-check"></i> Reschedule Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum date to today for appointment booking
+document.addEventListener('DOMContentLoaded', function() {
+    // Use server-side date for consistency
+    const today = '{{ today_date }}';
+    document.getElementById('appointment_date').setAttribute('min', today);
+});
+</script>
+{% endblock %}

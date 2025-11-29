@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-speedometer2"></i> Admin Dashboard
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('admin_search') }}" class="row g-3">
+                    <div class="col-md-7">
+                        <input type="text" class="form-control" name="q" placeholder="Search doctors or patients..." required>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="type" class="form-select">
+                            <option value="doctors">Doctors</option>
+                            <option value="patients">Patients</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title">Total Doctors</h5>
+                        <h2 class="mb-0">{{ total_doctors }}</h2>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-person-badge display-4"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_doctors') }}" class="text-white text-decoration-none">
+                    View Details <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title">Total Patients</h5>
+                        <h2 class="mb-0">{{ total_patients }}</h2>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people display-4"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_patients') }}" class="text-white text-decoration-none">
+                    View Details <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title">Total Appointments</h5>
+                        <h2 class="mb-0">{{ total_appointments }}</h2>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-check display-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i> Add New Doctor
+                    </a>
+                    <a href="{{ url_for('manage_doctors') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-people"></i> Manage Doctors
+                    </a>
+                    <button class="btn btn-outline-success" onclick="alert('Feature coming soon!')">
+                        <i class="bi bi-graph-up"></i> View Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Appointments</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_appointments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in recent_appointments[:5] %}
+                            <tr>
+                                <td>{{ appointment.patient_name }}</td>
+                                <td>{{ appointment.doctor_name }}</td>
+                                <td>{{ appointment.appointment_date }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'secondary' }}">
+                                        {{ appointment.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin_patient_history', patient_id=appointment.patient_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-clock-history"></i> Patient History
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No appointments found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

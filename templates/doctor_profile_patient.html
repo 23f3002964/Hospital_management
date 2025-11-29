@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ doctor.name }} Profile - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-person-badge"></i> Doctor Profile
+            </h1>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                    {{ doctor.name[0] }}
+                </div>
+                
+                <h2 class="mb-1">{{ doctor.name }}</h2>
+                <p class="text-muted mb-3">MBBS, MD</p>
+                
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-primary">Specialization</h6>
+                                    <p class="mb-0">{{ doctor.specialization }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-primary">Experience</h6>
+                                    <p class="mb-0">10+ Years</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-primary">Phone</h6>
+                                    <p class="mb-0">{{ doctor.phone or 'Not available' }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-primary">Department</h6>
+                                    <p class="mb-0">{{ doctor.specialization }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border rounded p-3 mt-3 text-start">
+                            <h6 class="text-primary">About</h6>
+                            <p class="mb-0">
+                                Dr. {{ doctor.name }} is an experienced {{ doctor.specialization }} specialist with over 10 years of practice. 
+                                They are dedicated to providing quality healthcare services to all patients.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('doctor_availability_patient_view', doctor_id=doctor.id) }}" class="btn btn-primary">
+                        <i class="bi bi-calendar-check"></i> Check Availability
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">
+                        <i class="bi bi-arrow-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

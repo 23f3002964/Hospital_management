@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ doctor.name }} Availability - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-calendar-check"></i> {{ doctor.name }}'s Availability
+            </h1>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Go Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                        {{ doctor.name[0] }}
+                    </div>
+                    <div>
+                        <h5 class="mb-0">{{ doctor.name }}</h5>
+                        <p class="text-muted mb-0">{{ doctor.specialization }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">7-Day Schedule</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Morning<br><small class="text-muted">(9:00 AM - 12:00 PM)</small></th>
+                                <th>Afternoon<br><small class="text-muted">(12:00 PM - 3:00 PM)</small></th>
+                                <th>Evening<br><small class="text-muted">(3:00 PM - 6:00 PM)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for date_info in dates_info %}
+                            <tr>
+                                <td>{{ date_info.date }}</td>
+                                <td>{{ date_info.day }}</td>
+                                <td class="text-center">
+                                    {% if date_info.morning_status == 'available' %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif date_info.morning_status == 'booked' %}
+                                        <span class="badge bg-warning">Booked</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if date_info.afternoon_status == 'available' %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif date_info.afternoon_status == 'booked' %}
+                                        <span class="badge bg-warning">Booked</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if date_info.evening_status == 'available' %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif date_info.evening_status == 'booked' %}
+                                        <span class="badge bg-warning">Booked</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Unavailable</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>Legend:</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-success">Available - You can book an appointment</span>
+                        <span class="badge bg-warning">Booked - Time slot is already taken</span>
+                        <span class="badge bg-secondary">Unavailable - Doctor is not available</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

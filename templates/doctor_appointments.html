@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}My Appointments - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-calendar3"></i> My Appointments
+            </h1>
+            <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Appointments</h5>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Patient</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td>{{ appointment.appointment_date }}</td>
+                                <td>
+                                    <strong>{{ appointment.appointment_time }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            {{ appointment.patient_name[0] }}
+                                        </div>
+                                        <a href="{{ url_for('doctor_patient_history', patient_id=appointment.patient_id) }}" class="text-decoration-none">
+                                            {{ appointment.patient_name }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>{{ appointment.patient_phone or '-' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'secondary' }}">
+                                        {{ appointment.status.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if appointment.status == 'booked' %}
+                                    <a href="{{ url_for('update_patient_history', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Update
+                                    </a>
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ appointment.id }}">
+                                        <i class="bi bi-check-circle"></i> Complete
+                                    </button>
+                                    <form method="POST" action="{{ url_for('doctor_cancel_appointment', appointment_id=appointment.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i> Cancel
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Modal for completing appointment -->
+                                    <div class="modal fade" id="completeModal{{ appointment.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form method="POST" action="{{ url_for('complete_appointment', appointment_id=appointment.id) }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Complete Appointment</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <h6>Patient: {{ appointment.patient_name }}</h6>
+                                                        <hr>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Diagnosis</label>
+                                                            <textarea class="form-control" name="diagnosis" rows="3" required></textarea>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Prescription</label>
+                                                            <textarea class="form-control" name="prescription" rows="3" required></textarea>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Treatment Notes</label>
+                                                            <textarea class="form-control" name="treatment_notes" rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-success">Complete Appointment</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% elif appointment.status == 'completed' %}
+                                    <a href="{{ url_for('update_patient_history', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <span class="text-muted">{{ appointment.status.title() }}</span>
+                                    {% else %}
+                                    <span class="text-muted">{{ appointment.status.title() }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x display-1 text-muted"></i>
+                    <h4 class="text-muted">No appointments found</h4>
+                    <p class="text-muted">Your appointments will appear here</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

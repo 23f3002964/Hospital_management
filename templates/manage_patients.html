@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Patients - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-people"></i> Manage Patients
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-10">
+                        <input type="text" class="form-control" name="search" placeholder="Search patients by name, username, email, or phone..." value="{{ search_query or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                {% if patients %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Username</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                            {{ patient.name[0] }}
+                                        </div>
+                                        {{ patient.name }}
+                                    </div>
+                                </td>
+                                <td>{{ patient.phone or '-' }}</td>
+                                <td>{{ patient.email }}</td>
+                                <td>{{ patient.address or '-' }}</td>
+                                <td>{{ patient.username }}</td>
+                                <td>{{ patient.created_at[:10] if patient.created_at else '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin_patient_history', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-clock-history"></i> View History
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-info" onclick="alert('Edit feature coming soon!')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people display-1 text-muted"></i>
+                    <h4 class="text-muted">No patients found</h4>
+                    {% if search_query %}
+                    <p class="text-muted">No patients matched your search for "{{ search_query }}". Try different search terms.</p>
+                    {% else %}
+                    <p class="text-muted">Patients will appear here once they register</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

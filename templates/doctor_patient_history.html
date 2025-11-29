@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Patient History - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-person-lines-fill"></i> Patient History
+            </h1>
+            <a href="{{ url_for('doctor_appointments') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Appointments
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="card-title text-primary">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                                    {{ patient.name[0] }}
+                                </div>
+                                {{ patient.name }}
+                            </div>
+                        </h5>
+                        <p class="mb-1"><i class="bi bi-telephone"></i> {{ patient.phone or 'Not provided' }}</p>
+                        <p class="mb-1"><i class="bi bi-envelope"></i> {{ patient.email or 'Not provided' }}</p>
+                        <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ patient.address or 'Not provided' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Treatment History</h5>
+            </div>
+            <div class="card-body">
+                {% if treatments %}
+                {% for treatment in treatments %}
+                <div class="card mb-3 border-start border-primary border-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5 class="card-title text-primary">
+                                    <i class="bi bi-calendar"></i> {{ treatment.appointment_date }} at {{ treatment.appointment_time }}
+                                </h5>
+                                
+                                <div class="mt-3">
+                                    <h6 class="text-success">
+                                        <i class="bi bi-clipboard-pulse"></i> Diagnosis:
+                                    </h6>
+                                    <p class="mb-2">{{ treatment.diagnosis }}</p>
+                                    
+                                    <h6 class="text-info">
+                                        <i class="bi bi-prescription2"></i> Prescription:
+                                    </h6>
+                                    <p class="mb-2">{{ treatment.prescription }}</p>
+                                    
+                                    {% if treatment.treatment_notes %}
+                                    <h6 class="text-warning">
+                                        <i class="bi bi-journal-medical"></i> Notes:
+                                    </h6>
+                                    <p class="mb-0">{{ treatment.treatment_notes }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px;">
+                                    {{ session.username[0].upper() }}
+                                </div>
+                                <small class="text-muted">
+                                    Treated on {{ treatment.created_at[:10] if treatment.created_at else treatment.appointment_date }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                    <h4 class="text-muted">No treatment history yet</h4>
+                    <p class="text-muted">Treatment records will appear here after appointments are completed</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

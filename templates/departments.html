@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Departments - Hospital Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="bi bi-building"></i> Hospital Departments
+            </h1>
+            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if departments %}
+        <div class="row">
+            {% for department in departments %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ department.name }}</h5>
+                        <p class="card-text">{{ department.description or 'No description available' }}</p>
+                        <a href="{{ url_for('department_details', department_id=department.id) }}" class="btn btn-primary">
+                            <i class="bi bi-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-building display-1 text-muted"></i>
+            <h4 class="text-muted">No departments available</h4>
+            <p class="text-muted">Departments will appear here</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
