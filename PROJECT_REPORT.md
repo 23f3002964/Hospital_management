@@ -15,13 +15,15 @@ We developed a web-based hospital management system using the Flask framework in
 
 1. **Database Design**: Created a normalized relational database with tables for users, doctors, patients, appointments, treatments, and departments using SQLAlchemy ORM.
 
-2. **Role-Based Architecture**: Implemented a three-tier role system (admin, doctor, patient) with distinct dashboards and permissions.
+2. **Modular Architecture**: Implemented a modular structure by separating route handlers into a dedicated routes.py file for better code organization and maintainability.
 
-3. **Security Implementation**: Added input sanitization, password hashing, and session management for secure authentication.
+3. **Role-Based Architecture**: Implemented a three-tier role system (admin, doctor, patient) with distinct dashboards and permissions.
 
-4. **User Experience**: Designed intuitive interfaces using Bootstrap 5 for responsive design across devices.
+4. **Security Implementation**: Added input sanitization, password hashing, and session management for secure authentication.
 
-5. **Core Functionalities**: Developed features for appointment booking, availability management, medical history tracking, and administrative controls.
+5. **User Experience**: Designed intuitive interfaces using Bootstrap 5 for responsive design across devices.
+
+6. **Core Functionalities**: Developed features for appointment booking, availability management, medical history tracking, and administrative controls.
 
 ## 2. Frameworks and Libraries Used
 
@@ -181,5 +183,9 @@ erDiagram
 - Automated database schema creation
 - Relationship management between entities
 
-### Video link : 
+### Modular Code Structure
+- Separation of route handlers into dedicated routes.py file
+- Improved code organization and maintainability
+- Easier to extend and modify functionality
 
+### Video link : [Hospital Management System](https://www.youtube.com/watch?v=Q9u0OqV9a9w)

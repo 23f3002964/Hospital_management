@@ -1,21 +1,15 @@
 # 🏥 Hospital Management System
 
-A comprehensive web-based hospital management system built with Flask that facilitates efficient management of doctors, patients, appointments, and medical records with role-based access control. This system provides separate dashboards for administrators, doctors, and patients with tailored functionality for each user type.
+A comprehensive web-based hospital management system built with Flask, featuring role-based access control for administrators, doctors, and patients.
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![Flask](https://img.shields.io/badge/Flask-2.3.3-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+## 🎯 Project Overview
 
-## 🌟 Key Features
-
-- **🔐 Role-Based Access Control**: Separate dashboards and permissions for Admin, Doctor, and Patient roles
-- **📅 Appointment Management**: Book, reschedule, and cancel appointments with real-time availability
-- **👨‍⚕️ Doctor Availability**: Flexible scheduling system with basic and advanced availability settings
-- **📋 Medical Records**: Comprehensive patient history tracking and treatment documentation
-- **🔍 Search Functionality**: Quick search for doctors and patients
-- **📱 Responsive Design**: Mobile-friendly interface using Bootstrap 5
-- **🛡️ Security**: Password hashing, input sanitization, and session management
+This system provides a complete solution for managing hospital operations including:
+- Doctor and patient management
+- Appointment scheduling and tracking
+- Medical history and treatment records
+- Department organization
+- Role-based dashboards with appropriate permissions
 
 ## 🛠 Tech Stack / Technologies Used
 
@@ -37,7 +31,7 @@ A comprehensive web-based hospital management system built with Flask that facil
 
 ## 🏗 Project Architecture Overview
 
-The system follows a Model-View-Controller (MVC) architecture pattern:
+The system follows a Model-View-Controller (MVC) architecture pattern with modular routing:
 
 ```
 Hospital Management System
@@ -63,7 +57,8 @@ Hospital Management System
 
 ```
 Hospital_management/
-├── app.py                  # Main application file
+├── app.py                  # Main application file with models and initialization
+├── routes.py               # All route handlers separated for modularity
 ├── requirements.txt        # Python dependencies
 ├── PROJECT_REPORT.md       # Project documentation
 ├── README.md               # This file
@@ -84,7 +79,8 @@ Hospital_management/
 
 | File | Description |
 |------|-------------|
-| `app.py` | Main Flask application with all routes and business logic |
+| `app.py` | Main Flask application with models and initialization |
+| `routes.py` | All route handlers separated for better modularity |
 | `requirements.txt` | Lists all Python dependencies |
 | `templates/base.html` | Base template extended by all other templates |
 | `templates/login.html` | User authentication interface |
@@ -95,6 +91,10 @@ Hospital_management/
 | `static/validation.js` | Frontend form validation scripts |
 
 ## 🚀 Installation Guide
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
 
 ### Cloning
 
@@ -211,7 +211,7 @@ The application will be available at `http://localhost:5000`
 
 The system uses 6 main tables with the following relationships:
 
-```
+```mermaid
 erDiagram
     USERS ||--|| DOCTORS : "1:1"
     USERS ||--|| PATIENTS : "1:1"

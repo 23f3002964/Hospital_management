@@ -20,14 +20,19 @@
     <div class="col-12">
         <div class="card mb-4">
             <div class="card-body">
-                <form method="GET" class="row g-3">
+                <form method="GET" class="row g-3" id="doctorSearchForm">
                     <div class="col-md-10">
-                        <input type="text" class="form-control" name="search" placeholder="Search doctors by name, specialization, or username..." value="{{ search_query or '' }}">
+                        <input type="text" class="form-control" name="search" id="doctorSearchInput" placeholder="Search doctors by name, specialization, or username..." value="{{ search_query or '' }}">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search"></i> Search
-                        </button>
+                        <div class="btn-group w-100" role="group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearDoctorSearch()">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -98,4 +103,11 @@
         </div>
     </div>
 </div>
+
+<script>
+function clearDoctorSearch() {
+    document.getElementById('doctorSearchInput').value = '';
+    document.getElementById('doctorSearchForm').submit();
+}
+</script>
 {% endblock %}
