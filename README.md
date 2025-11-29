@@ -21,7 +21,7 @@ A comprehensive web-based hospital management system built with Flask that facil
 
 ### Backend
 - **Flask 2.3.3** - Web framework
-- **SQLite3** - Database engine
+- **Flask-SQLAlchemy 3.0.5** - Database ORM
 - **Hashlib** - Password hashing (SHA-256)
 - **Jinja2** - Template engine
 - **Werkzeug** - WSGI utility library
@@ -33,7 +33,7 @@ A comprehensive web-based hospital management system built with Flask that facil
 - **JavaScript** - Client-side validation and interactivity
 
 ### Database
-- **SQLite** - Lightweight relational database
+- **SQLite** - Lightweight relational database with SQLAlchemy ORM
 
 ## 🏗 Project Architecture Overview
 
@@ -67,7 +67,6 @@ Hospital_management/
 ├── requirements.txt        # Python dependencies
 ├── PROJECT_REPORT.md       # Project documentation
 ├── README.md               # This file
-├── hospital_new.db         # SQLite database
 ├── static/
 │   ├── style.css           # Custom CSS styling
 │   └── validation.js       # Frontend validation scripts
@@ -94,7 +93,6 @@ Hospital_management/
 | `templates/patient_dashboard.html` | Patient appointment booking system |
 | `static/style.css` | Custom styling for the application |
 | `static/validation.js` | Frontend form validation scripts |
-| `hospital_new.db` | SQLite database file |
 
 ## 🚀 Installation Guide
 
@@ -213,7 +211,7 @@ The application will be available at `http://localhost:5000`
 
 The system uses 6 main tables with the following relationships:
 
-```mermaid
+```
 erDiagram
     USERS ||--|| DOCTORS : "1:1"
     USERS ||--|| PATIENTS : "1:1"
@@ -234,10 +232,10 @@ erDiagram
 
 ## ⚙ Configuration Details
 
-The application uses a SQLite database (`hospital_new.db`) which is automatically created on first run. Key configuration values in `app.py`:
+The application uses Flask-SQLAlchemy for database operations with SQLite as the underlying database engine. The database (`hospital_new.db`) is automatically created on first run. Key configuration values in `app.py`:
 
 ```python
-DATABASE = 'hospital_new.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hospital_new.db'
 app.secret_key = 'hospital-management-secret-key'
 ```
 

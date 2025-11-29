@@ -2,7 +2,6 @@
  ### Name: Aditya Raj
  ### Roll No: 23f3002964
  ### Email: 23f3002964@ds.study.iitm.ac.in
- 
 
 # Hospital Management System - Project Report
 
@@ -14,7 +13,7 @@ The project involves developing a comprehensive hospital management system that 
 ### Approach to Problem Statement
 We developed a web-based hospital management system using the Flask framework in Python. Our approach involved:
 
-1. **Database Design**: Created a normalized relational database with tables for users, doctors, patients, appointments, treatments, and departments.
+1. **Database Design**: Created a normalized relational database with tables for users, doctors, patients, appointments, treatments, and departments using SQLAlchemy ORM.
 
 2. **Role-Based Architecture**: Implemented a three-tier role system (admin, doctor, patient) with distinct dashboards and permissions.
 
@@ -28,7 +27,7 @@ We developed a web-based hospital management system using the Flask framework in
 
 ### Backend Framework
 - **Flask 2.3.3**: Main web framework for building the application
-- **SQLite3**: Database engine for data persistence
+- **Flask-SQLAlchemy 3.0.5**: ORM for database operations and data persistence
 - **Hashlib**: For secure password hashing using SHA-256
 - **datetime**: For date and time management
 - **functools**: For implementing decorators
@@ -175,6 +174,12 @@ erDiagram
 - Email format validation
 - Phone number format validation
 - Password strength validation
+
+### Database Management
+- SQLAlchemy ORM for simplified database operations
+- Object-relational mapping for clean data handling
+- Automated database schema creation
+- Relationship management between entities
 
 ### Video link : 
 
