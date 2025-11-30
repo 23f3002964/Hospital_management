@@ -1,210 +1,231 @@
 /* Custom Hospital Management System Styles */
 
+/* CSS Custom Properties (Variables) for consistent color scheme */
 :root {
-    --primary-color: #0d6efd;
-    --success-color: #198754;
-    --info-color: #0dcaf0;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --light-color: #f8f9fa;
-    --dark-color: #212529;
+    --primary-color: #0d6efd;    /* Bootstrap primary blue */
+    --success-color: #198754;    /* Bootstrap success green */
+    --info-color: #0dcaf0;       /* Bootstrap info cyan */
+    --warning-color: #ffc107;    /* Bootstrap warning yellow */
+    --danger-color: #dc3545;     /* Bootstrap danger red */
+    --light-color: #f8f9fa;      /* Bootstrap light gray */
+    --dark-color: #212529;       /* Bootstrap dark gray */
 }
 
+/* Base body styles for overall page appearance */
 body {
-    background-color: #f8f9fa;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8f9fa;   /* Light gray background */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  /* Modern font stack */
 }
 
-/* Navigation Styles */
+/* Navigation Styles - Top navbar appearance */
 .navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Subtle shadow for depth */
 }
 
+/* Brand/logo styling in navbar */
 .navbar-brand {
-    font-weight: 600;
+    font-weight: 600;  /* Bold text for emphasis */
 }
 
-/* Card Styles */
+/* Card Styles - For all dashboard and content cards */
 .card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border-radius: 0.5rem;
-    transition: box-shadow 0.15s ease-in-out;
+    border: none;                              /* Remove default border */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);  /* Light shadow */
+    border-radius: 0.5rem;                     /* Rounded corners */
+    transition: box-shadow 0.15s ease-in-out;  /* Smooth shadow transition */
 }
 
+/* Card hover effect for interactivity */
 .card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);  /* Enhanced shadow on hover */
 }
 
+/* Card header styling */
 .card-header {
-    background-color: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-    font-weight: 500;
+    background-color: rgba(0, 0, 0, 0.03);     /* Light background */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);  /* Subtle border */
+    font-weight: 500;                          /* Medium font weight */
 }
 
-/* Avatar Styles */
+/* Avatar Styles - For user profile icons */
 .avatar {
-    font-weight: 600;
-    font-size: 1.2em;
+    font-weight: 600;    /* Bold text */
+    font-size: 1.2em;    /* Slightly larger text */
 }
 
-/* Button Styles */
+/* Button Styles - Global button appearance */
 .btn {
-    border-radius: 0.375rem;
-    font-weight: 500;
-    transition: all 0.15s ease-in-out;
+    border-radius: 0.375rem;                    /* Rounded corners */
+    font-weight: 500;                           /* Medium font weight */
+    transition: all 0.15s ease-in-out;          /* Smooth transitions */
 }
 
+/* Primary button styling */
 .btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--primary-color);     /* Use primary color variable */
+    border-color: var(--primary-color);         /* Match border to background */
 }
 
+/* Primary button hover effect */
 .btn-primary:hover {
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
-    transform: translateY(-1px);
+    background-color: #0b5ed7;                  /* Darker blue on hover */
+    border-color: #0a58ca;                      /* Matching border */
+    transform: translateY(-1px);                /* Slight lift effect */
 }
 
-/* Form Styles */
+/* Form Styles - Input and select field styling */
 .form-control, .form-select {
-    border-radius: 0.375rem;
-    border: 1px solid #ced4da;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-radius: 0.375rem;                    /* Rounded corners */
+    border: 1px solid #ced4da;                  /* Light gray border */
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;  /* Smooth focus transitions */
 }
 
+/* Form field focus state */
 .form-control:focus, .form-select:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #86b7fe;                      /* Blue border on focus */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);  /* Blue glow effect */
 }
 
-/* Alert Styles */
+/* Alert Styles - Notification messages */
 .alert {
-    border: none;
-    border-radius: 0.5rem;
+    border: none;                               /* Remove default border */
+    border-radius: 0.5rem;                      /* Rounded corners */
 }
 
+/* Info alert styling */
 .alert-info {
-    background-color: rgba(13, 202, 240, 0.1);
-    color: #055160;
+    background-color: rgba(13, 202, 240, 0.1);  /* Light cyan background */
+    color: #055160;                             /* Dark cyan text */
 }
 
+/* Success alert styling */
 .alert-success {
-    background-color: rgba(25, 135, 84, 0.1);
-    color: #0f5132;
+    background-color: rgba(25, 135, 84, 0.1);   /* Light green background */
+    color: #0f5132;                             /* Dark green text */
 }
 
-/* Badge Styles */
+/* Badge Styles - Status indicators */
 .badge {
-    font-weight: 500;
-    border-radius: 0.375rem;
+    font-weight: 500;                           /* Medium font weight */
+    border-radius: 0.375rem;                    /* Rounded corners */
 }
 
-/* Table Styles */
+/* Table Styles - Data display tables */
 .table {
-    margin-bottom: 0;
+    margin-bottom: 0;                           /* Remove default bottom margin */
 }
 
+/* Table header styling */
 .table th {
-    font-weight: 600;
-    color: var(--dark-color);
-    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;                           /* Bold headers */
+    color: var(--dark-color);                   /* Dark text */
+    border-bottom: 2px solid #dee2e6;           /* Thicker bottom border */
 }
 
+/* Table hover effect */
 .table-hover tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.075);
+    background-color: rgba(0, 0, 0, 0.075);     /* Light gray highlight */
 }
 
-/* Custom Dashboard Card Colors */
+/* Custom Dashboard Card Colors - Gradient backgrounds for dashboard cards */
 .bg-primary {
-    background: linear-gradient(45deg, #0d6efd, #6610f2) !important;
+    background: linear-gradient(45deg, #0d6efd, #6610f2) !important;  /* Blue to purple gradient */
 }
 
 .bg-success {
-    background: linear-gradient(45deg, #198754, #20c997) !important;
+    background: linear-gradient(45deg, #198754, #20c997) !important;  /* Green to teal gradient */
 }
 
 .bg-info {
-    background: linear-gradient(45deg, #0dcaf0, #6f42c1) !important;
+    background: linear-gradient(45deg, #0dcaf0, #6f42c1) !important;  /* Cyan to purple gradient */
 }
 
-/* Border accent for cards */
+/* Border accent for cards - Left border highlights */
 .border-left-primary {
-    border-left: 4px solid var(--primary-color) !important;
+    border-left: 4px solid var(--primary-color) !important;  /* Blue left border */
 }
 
 .border-left-success {
-    border-left: 4px solid var(--success-color) !important;
+    border-left: 4px solid var(--success-color) !important;  /* Green left border */
 }
 
 .border-left-info {
-    border-left: 4px solid var(--info-color) !important;
+    border-left: 4px solid var(--info-color) !important;     /* Cyan left border */
 }
 
-/* Animation for page load */
+/* Animation for page load - Smooth fade-in effect */
 @keyframes fadeInUp {
     from {
-        opacity: 0;
-        transform: translate3d(0, 40px, 0);
+        opacity: 0;                              /* Start invisible */
+        transform: translate3d(0, 40px, 0);      /* Start 40px below */
     }
     to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
+        opacity: 1;                              /* End fully visible */
+        transform: translate3d(0, 0, 0);         /* End at original position */
     }
 }
 
+/* Apply fade-in animation to cards and alerts */
 .card, .alert {
-    animation: fadeInUp 0.5s ease-out;
+    animation: fadeInUp 0.5s ease-out;           /* 0.5 second animation */
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - Mobile-specific styles */
 @media (max-width: 768px) {
+    /* Reduce padding on smaller screens */
     .card-body {
         padding: 1rem;
     }
     
+    /* Adjust button spacing for vertical button groups */
     .btn-group-vertical .btn {
         margin-bottom: 0.5rem;
     }
     
+    /* Reduce font size for better mobile readability */
     .table-responsive {
         font-size: 0.875rem;
     }
 }
 
-/* Loading states */
+/* Loading states - Disabled button appearance */
 .btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
+    opacity: 0.65;                               /* Semi-transparent */
+    cursor: not-allowed;                         /* Not-allowed cursor */
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Custom scrollbar for webkit browsers - Styled scrollbars */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 8px;                                  /* Thin scrollbar */
 }
 
+/* Scrollbar track styling */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+    background: #f1f1f1;                         /* Light gray track */
+    border-radius: 4px;                          /* Rounded corners */
 }
 
+/* Scrollbar thumb styling */
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
+    background: #c1c1c1;                         /* Gray thumb */
+    border-radius: 4px;                          /* Rounded corners */
 }
 
+/* Scrollbar thumb hover effect */
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: #a8a8a8;                         /* Darker gray on hover */
 }
 
-/* Print styles */
+/* Print styles - Hide unnecessary elements when printing */
 @media print {
+    /* Hide navigation, buttons, and alerts when printing */
     .navbar, .btn, .alert {
         display: none !important;
     }
     
+    /* Simplify card appearance for print */
     .card {
-        border: 1px solid #000 !important;
-        box-shadow: none !important;
+        border: 1px solid #000 !important;       /* Black border */
+        box-shadow: none !important;             /* Remove shadows */
     }
 }
