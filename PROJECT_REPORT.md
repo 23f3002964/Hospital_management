@@ -50,7 +50,7 @@ We developed a web-based hospital management system using the Flask framework in
 - **blinker 1.6.3**: Signal/event dispatching
 
 ## 3. ER Diagram of Database
- https://drive.google.com/drive/folders/1KA68K-JBuVjftazCqnVpR9yQJbKR9_s1?usp=sharing
+ [Drive Link for Visualisation](https://drive.google.com/drive/folders/1KA68K-JBuVjftazCqnVpR9yQJbKR9_s1?usp=sharing)
 
 ```mermaid
 erDiagram
