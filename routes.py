@@ -422,8 +422,18 @@ def admin_appointments():
      .join(Doctor, Appointment.doctor_id == Doctor.id)\
      .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
     
+    # Remove any potential duplicates
+    unique_appointments = []
+    seen_appointment_ids = set()
+    
+    for appointment_tuple in appointments:
+        appointment = appointment_tuple[0]
+        if appointment.id not in seen_appointment_ids:
+            unique_appointments.append(appointment_tuple)
+            seen_appointment_ids.add(appointment.id)
+    
     return render_template('admin_appointments.html', 
-                         appointments=appointments)
+                         appointments=unique_appointments)
 
 @app.route('/admin/search')
 @login_required
