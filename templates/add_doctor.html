@@ -2,6 +2,25 @@
 
 {% block title %}Add Doctor - Hospital Management System{% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const specializationSelect = document.getElementById('specialization');
+    const otherSpecializationInput = document.getElementById('other_specialization');
+    
+    specializationSelect.addEventListener('change', function() {
+        if (this.value === 'Other') {
+            otherSpecializationInput.style.display = 'block';
+            otherSpecializationInput.required = true;
+        } else {
+            otherSpecializationInput.style.display = 'none';
+            otherSpecializationInput.required = false;
+        }
+    });
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -49,15 +68,12 @@
                             <label for="specialization" class="form-label">Specialization</label>
                             <select class="form-select" id="specialization" name="specialization" required>
                                 <option value="">Select Specialization</option>
-                                <option value="Cardiology">Cardiology</option>
-                                <option value="Neurology">Neurology</option>
-                                <option value="Orthopedics">Orthopedics</option>
-                                <option value="Pediatrics">Pediatrics</option>
-                                <option value="General Medicine">General Medicine</option>
-                                <option value="Dermatology">Dermatology</option>
-                                <option value="ENT">ENT</option>
-                                <option value="Gynecology">Gynecology</option>
+                                {% for spec in specializations %}
+                                    <option value="{{ spec }}">{{ spec }}</option>
+                                {% endfor %}
+                                <option value="Other">Other (Specify)</option>
                             </select>
+                            <input type="text" class="form-control mt-2" id="other_specialization" name="other_specialization" placeholder="Enter specialization" style="display: none;">
                             <div id="specialization_error" class="text-danger small" style="display: none;"></div>
                         </div>
                         <div class="col-md-6 mb-3">

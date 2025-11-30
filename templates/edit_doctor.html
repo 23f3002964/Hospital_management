@@ -2,6 +2,31 @@
 
 {% block title %}Edit Doctor - Hospital Management System{% endblock %}
 
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const specializationSelect = document.getElementById('specialization');
+    const otherSpecializationInput = document.getElementById('other_specialization');
+    
+    specializationSelect.addEventListener('change', function() {
+        if (this.value === 'Other') {
+            otherSpecializationInput.style.display = 'block';
+            otherSpecializationInput.required = true;
+        } else {
+            otherSpecializationInput.style.display = 'none';
+            otherSpecializationInput.required = false;
+        }
+    });
+    
+    // Initialize on page load
+    if (specializationSelect.value === 'Other') {
+        otherSpecializationInput.style.display = 'block';
+        otherSpecializationInput.required = true;
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -38,7 +63,14 @@
                     
                     <div class="mb-3">
                         <label for="specialization" class="form-label">Specialization</label>
-                        <input type="text" class="form-control" id="specialization" name="specialization" value="{{ doctor.specialization }}" required>
+                        <select class="form-select" id="specialization" name="specialization" required>
+                            <option value="">Select Specialization</option>
+                            {% for spec in specializations %}
+                                <option value="{{ spec }}" {% if doctor.specialization == spec %}selected{% endif %}>{{ spec }}</option>
+                            {% endfor %}
+                            <option value="Other">Other (Specify)</option>
+                        </select>
+                        <input type="text" class="form-control mt-2" id="other_specialization" name="other_specialization" placeholder="Enter specialization" style="display: none;">
                         <div id="specialization_error" class="text-danger small" style="display: none;"></div>
                     </div>
                     

@@ -111,6 +111,12 @@
                     </div>
                 </div>
             </div>
+            <!-- Card footer with link to view all appointments -->
+            <div class="card-footer">
+                <a href="{{ url_for('admin_appointments') }}" class="text-white text-decoration-none">
+                    View Details <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -134,10 +140,6 @@
                     <a href="{{ url_for('manage_doctors') }}" class="btn btn-outline-primary">
                         <i class="bi bi-people"></i> Manage Doctors
                     </a>
-                    <!-- Placeholder button for future reports feature -->
-                    <button class="btn btn-outline-success" onclick="alert('Feature coming soon!')">
-                        <i class="bi bi-graph-up"></i> View Reports
-                    </button>
                 </div>
             </div>
         </div>

@@ -262,10 +262,17 @@ def edit_doctor(doctor_id):
         flash('Doctor not found', 'error')
         return redirect(url_for('manage_doctors'))
     
+    # Get distinct specializations from existing doctors
+    specializations = db.session.query(Doctor.specialization).distinct().filter(Doctor.specialization.isnot(None)).all()
+    specializations = [spec[0] for spec in specializations]
+    
     if request.method == 'POST':
         # Sanitize inputs
         name = sanitize_input(request.form['name'])
         specialization = sanitize_input(request.form['specialization'])
+        # If 'Other' is selected, use the other_specialization field
+        if specialization == 'Other':
+            specialization = sanitize_input(request.form.get('other_specialization', ''))
         phone = sanitize_input(request.form['phone'])
         email = sanitize_input(request.form['email'])
         
@@ -288,7 +295,7 @@ def edit_doctor(doctor_id):
         if errors:
             for error in errors:
                 flash(error, 'error')
-            return render_template('edit_doctor.html', doctor=doctor)
+            return render_template('edit_doctor.html', doctor=doctor, specializations=specializations)
         
         doctor.name = name
         doctor.specialization = specialization
@@ -299,7 +306,7 @@ def edit_doctor(doctor_id):
         return redirect(url_for('manage_doctors'))
     
     # Handle GET request - display the form
-    return render_template('edit_doctor.html', doctor=doctor)
+    return render_template('edit_doctor.html', doctor=doctor, specializations=specializations)
 
 @app.route('/admin/doctors/delete/<int:doctor_id>', methods=['POST'])
 @login_required
@@ -341,6 +348,10 @@ def manage_patients():
 @role_required(['admin'])
 def add_doctor():
     """Add a new doctor to the system"""
+    # Get distinct specializations from existing doctors
+    specializations = db.session.query(Doctor.specialization).distinct().filter(Doctor.specialization.isnot(None)).all()
+    specializations = [spec[0] for spec in specializations]
+    
     if request.method == 'POST':
         # Sanitize inputs
         username = sanitize_input(request.form['username'])
@@ -348,6 +359,9 @@ def add_doctor():
         password = request.form['password']  # Don't sanitize passwords
         name = sanitize_input(request.form['name'])
         specialization = sanitize_input(request.form['specialization'])
+        # If 'Other' is selected, use the other_specialization field
+        if specialization == 'Other':
+            specialization = sanitize_input(request.form.get('other_specialization', ''))
         phone = sanitize_input(request.form['phone'])
         
         # Validate inputs
@@ -375,7 +389,7 @@ def add_doctor():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            return render_template('add_doctor.html')
+            return render_template('add_doctor.html', specializations=specializations)
         
         password_hash = hash_password(password)
         
@@ -390,7 +404,26 @@ def add_doctor():
         flash('Doctor added successfully!', 'success')
         return redirect(url_for('manage_doctors'))
     
-    return render_template('add_doctor.html')
+    return render_template('add_doctor.html', specializations=specializations)
+
+@app.route('/admin/appointments')
+@login_required
+@role_required(['admin'])
+def admin_appointments():
+    """Display all appointments for admin with patient and doctor information"""
+    # Get all appointments with patient and doctor information
+    appointments = db.session.query(
+        Appointment,
+        Patient.name.label('patient_name'),
+        Patient.phone.label('patient_phone'),
+        Doctor.name.label('doctor_name'),
+        Doctor.specialization.label('doctor_specialization')
+    ).join(Patient, Appointment.patient_id == Patient.id)\
+     .join(Doctor, Appointment.doctor_id == Doctor.id)\
+     .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc()).all()
+    
+    return render_template('admin_appointments.html', 
+                         appointments=appointments)
 
 @app.route('/admin/search')
 @login_required
