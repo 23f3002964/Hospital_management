@@ -68,16 +68,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Legend:</strong> 
-                        <span class="badge bg-success">Available</span> 
-                        <span class="badge bg-secondary">Unavailable</span> 
-                        <span class="badge bg-danger">Booked</span>
-                    </div>
-                    
+                    </div>                    
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save"></i> Save Availability
@@ -87,30 +78,6 @@
             </div>
         </div>
         
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Current Availability Settings</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold">Regular Days:</h6>
-                        {% if available_days %}
-                            <ul class="list-unstyled">
-                                {% for day in available_days %}
-                                <li><i class="bi bi-check-circle-fill text-success me-2"></i>{{ day }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="text-muted">No days selected</p>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold">Working Hours:</h6>
-                        <p>{{ availability_hours or 'Not set' }}</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
