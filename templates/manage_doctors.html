@@ -3,12 +3,15 @@
 {% block title %}Manage Doctors - Hospital Management System{% endblock %}
 
 {% block content %}
+<!-- Page header section with title and add doctor button -->
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Page title with doctors icon -->
             <h1 class="h3">
                 <i class="bi bi-people"></i> Manage Doctors
             </h1>
+            <!-- Button to add new doctor -->
             <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
                 <i class="bi bi-person-plus"></i> Add New Doctor
             </a>
@@ -16,19 +19,25 @@
     </div>
 </div>
 
+<!-- Search form section -->
 <div class="row">
     <div class="col-12">
         <div class="card mb-4">
             <div class="card-body">
+                <!-- Search form that submits via GET method -->
                 <form method="GET" class="row g-3" id="doctorSearchForm">
+                    <!-- Search input field taking up 10 columns -->
                     <div class="col-md-10">
                         <input type="text" class="form-control" name="search" id="doctorSearchInput" placeholder="Search doctors by name, specialization, or username..." value="{{ search_query or '' }}">
                     </div>
+                    <!-- Search and clear buttons taking up 2 columns -->
                     <div class="col-md-2">
                         <div class="btn-group w-100" role="group">
+                            <!-- Search button -->
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-search"></i> Search
                             </button>
+                            <!-- Clear search button -->
                             <button type="button" class="btn btn-outline-secondary" onclick="clearDoctorSearch()">
                                 <i class="bi bi-x"></i>
                             </button>
@@ -38,13 +47,17 @@
             </div>
         </div>
         
+        <!-- Doctors table card -->
         <div class="card">
             <div class="card-body">
+                <!-- Conditional display: show doctors table if doctors exist -->
                 {% if doctors %}
                 <div class="table-responsive">
+                    <!-- Doctors table -->
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <!-- Table headers -->
                                 <th>Name</th>
                                 <th>Specialization</th>
                                 <th>Phone</th>
@@ -54,26 +67,36 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loop through all doctors -->
                             {% for doctor in doctors %}
                             <tr>
+                                <!-- Doctor name with avatar -->
                                 <td>
                                     <div class="d-flex align-items-center">
+                                        <!-- Doctor avatar with first letter of name -->
                                         <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                                             {{ doctor.name[0] }}
                                         </div>
                                         {{ doctor.name }}
                                     </div>
                                 </td>
+                                <!-- Doctor specialization with badge styling -->
                                 <td>
                                     <span class="badge bg-info">{{ doctor.specialization }}</span>
                                 </td>
+                                <!-- Doctor phone number or placeholder -->
                                 <td>{{ doctor.phone or '-' }}</td>
+                                <!-- Doctor email -->
                                 <td>{{ doctor.email }}</td>
+                                <!-- Doctor username -->
                                 <td>{{ doctor.username }}</td>
+                                <!-- Action buttons -->
                                 <td>
+                                    <!-- Edit doctor button -->
                                     <a href="{{ url_for('edit_doctor', doctor_id=doctor.id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i> Edit
                                     </a>
+                                    <!-- Delete doctor form with confirmation -->
                                     <form method="POST" action="{{ url_for('delete_doctor', doctor_id=doctor.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this doctor? This action cannot be undone.')">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i> Delete
@@ -85,14 +108,17 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Display message if no doctors found -->
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-people display-1 text-muted"></i>
                     <h4 class="text-muted">No doctors found</h4>
+                    <!-- Conditional message based on search query -->
                     {% if search_query %}
                     <p class="text-muted">No doctors matched your search for "{{ search_query }}". Try different search terms.</p>
                     {% else %}
                     <p class="text-muted">Add your first doctor to get started</p>
+                    <!-- Button to add doctor when no doctors exist -->
                     <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
                         <i class="bi bi-person-plus"></i> Add Doctor
                     </a>
@@ -105,6 +131,7 @@
 </div>
 
 <script>
+// Function to clear search input and submit form
 function clearDoctorSearch() {
     document.getElementById('doctorSearchInput').value = '';
     document.getElementById('doctorSearchForm').submit();

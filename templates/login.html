@@ -3,23 +3,33 @@
 {% block title %}Login - Hospital Management System{% endblock %}
 
 {% block content %}
+<!-- Login form container with vertical centering -->
 <div class="row justify-content-center align-items-center min-vh-100">
+    <!-- Column sizing for different screen sizes -->
     <div class="col-lg-5 col-md-7">
+        <!-- Login card with shadow and rounded corners -->
         <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <!-- Card header with hospital branding -->
             <div class="card-header bg-primary text-white text-center py-4">
                 <div class="d-flex justify-content-center mb-3">
+                    <!-- Hospital icon in a circular container -->
                     <div class="rounded-circle bg-white d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
                         <i class="bi bi-hospital text-primary fs-1"></i>
                     </div>
                 </div>
+                <!-- Page title and subtitle -->
                 <h2 class="fw-bold mb-1">Hospital Management</h2>
                 <p class="mb-0 opacity-75">Sign in to your account</p>
             </div>
             
+            <!-- Card body with login form -->
             <div class="card-body p-4 p-md-5">
+                <!-- Login form with validation -->
                 <form method="POST" class="needs-validation" novalidate>
+                    <!-- Username input field section -->
                     <div class="mb-4">
                         <label for="username" class="form-label fw-semibold">Username</label>
+                        <!-- Input group with icon prefix -->
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-light border-end-0">
                                 <i class="bi bi-person text-primary"></i>
@@ -31,11 +41,14 @@
                                    placeholder="Enter your username"
                                    required>
                         </div>
+                        <!-- Error message container for username validation -->
                         <div id="username_error" class="text-danger small mt-1" style="display: none;"></div>
                     </div>
                     
+                    <!-- Password input field section -->
                     <div class="mb-4">
                         <label for="password" class="form-label fw-semibold">Password</label>
+                        <!-- Input group with icon prefix -->
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-light border-end-0">
                                 <i class="bi bi-lock text-primary"></i>
@@ -47,9 +60,11 @@
                                    placeholder="Enter your password"
                                    required>
                         </div>
+                        <!-- Error message container for password validation -->
                         <div id="password_error" class="text-danger small mt-1" style="display: none;"></div>
                     </div>
                     
+                    <!-- Submit button section -->
                     <div class="d-grid mb-4">
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 fw-semibold">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
@@ -57,6 +72,7 @@
                     </div>
                 </form>
                 
+                <!-- Registration link section -->
                 <div class="text-center">
                     <p class="mb-0">Don't have an account? 
                         <a href="{{ url_for('register') }}" class="text-decoration-none fw-medium">Register as Patient</a>
@@ -67,38 +83,46 @@
     </div>
 </div>
 
+<!-- Custom CSS styles for login page -->
 <style>
+    /* Gradient background for the entire page */
     body {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         background-attachment: fixed;
         min-height: 100vh;
     }
     
+    /* Card styling with backdrop filter for frosted glass effect */
     .card {
         backdrop-filter: blur(10px);
         background: rgba(255, 255, 255, 0.95);
     }
     
+    /* Input group text styling */
     .input-group-text {
         background-color: #f8f9fa;
     }
     
+    /* Form control focus styling */
     .form-control:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
     }
     
+    /* Primary button gradient styling */
     .btn-primary {
         background: linear-gradient(45deg, #667eea, #764ba2);
         border: none;
         transition: all 0.3s ease;
     }
     
+    /* Primary button hover effect */
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
     
+    /* Circular element shadow effect */
     .rounded-circle {
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }

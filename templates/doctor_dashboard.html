@@ -3,11 +3,14 @@
 {% block title %}Doctor Dashboard - Hospital Management System{% endblock %}
 
 {% block content %}
+<!-- Page header section with welcome message -->
 <div class="row">
     <div class="col-12">
+        <!-- Main page title with doctor icon -->
         <h1 class="h3 mb-4">
             <i class="bi bi-person-badge"></i> Doctor Dashboard
         </h1>
+        <!-- Welcome alert showing doctor's name and specialization -->
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i>
             Welcome, <strong>{{ doctor.name }}</strong> - {{ doctor.specialization }}
@@ -15,18 +18,24 @@
     </div>
 </div>
 
+<!-- Main content area with appointments and quick actions -->
 <div class="row">
+    <!-- Upcoming appointments section - takes up 8 columns on medium screens and larger -->
     <div class="col-md-8">
         <div class="card">
+            <!-- Card header showing upcoming appointments for next 7 days -->
             <div class="card-header">
                 <h5 class="mb-0">Upcoming Appointments (Next 7 Days)</h5>
             </div>
             <div class="card-body">
+                <!-- Conditional display: show appointments table if appointments exist -->
                 {% if appointments %}
                 <div class="table-responsive">
+                    <!-- Appointments table -->
                     <table class="table">
                         <thead>
                             <tr>
+                                <!-- Table headers for appointment information -->
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Patient</th>
@@ -36,37 +45,51 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loop through all upcoming appointments -->
                             {% for appointment_tuple in appointments %}
+                            <!-- Extract appointment object and related data -->
                             {% set appointment = appointment_tuple[0] %}
                             {% set patient_name = appointment_tuple[1] %}
                             {% set patient_phone = appointment_tuple[2] %}
                             <tr>
+                                <!-- Appointment date column -->
                                 <td>{{ appointment.appointment_date }}</td>
+                                <!-- Appointment time column with bold styling -->
                                 <td>
                                     <strong>{{ appointment.appointment_time }}</strong>
                                 </td>
+                                <!-- Patient name with avatar icon -->
                                 <td>
                                     <div class="d-flex align-items-center">
+                                        <!-- Patient avatar with first letter of name -->
                                         <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
                                             {{ patient_name[0] }}
                                         </div>
                                         {{ patient_name }}
                                     </div>
                                 </td>
+                                <!-- Patient phone number or placeholder if not available -->
                                 <td>{{ patient_phone or '-' }}</td>
+                                <!-- Appointment status with dynamic badge styling -->
                                 <td>
+                                    <!-- Conditional badge styling based on appointment status -->
                                     <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'secondary' }}">
                                         {{ appointment.status.title() }}
                                     </span>
                                 </td>
+                                <!-- Actions column with different options based on appointment status -->
                                 <td>
+                                    <!-- Show different actions based on appointment status -->
                                     {% if appointment.status == 'booked' %}
+                                    <!-- Update appointment button -->
                                     <a href="/doctor/appointment/{{ appointment.id }}/update-history" class="btn btn-sm btn-primary">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
+                                    <!-- Complete appointment button that opens modal -->
                                     <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#completeModal{{ appointment.id }}">
                                         <i class="bi bi-check-circle"></i> Complete
                                     </button>
+                                    <!-- Cancel appointment form with confirmation -->
                                     <form method="POST" action="{{ url_for('doctor_cancel_appointment', appointment_id=appointment.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-x-circle"></i> Cancel
@@ -77,28 +100,34 @@
                                     <div class="modal fade" id="completeModal{{ appointment.id }}" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
+                                                <!-- Form to submit appointment completion details -->
                                                 <form method="POST" action="{{ url_for('complete_appointment', appointment_id=appointment.id) }}">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">Complete Appointment</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
+                                                        <!-- Display patient name -->
                                                         <h6>Patient: {{ patient_name }}</h6>
                                                         <hr>
+                                                        <!-- Diagnosis input field -->
                                                         <div class="mb-3">
                                                             <label class="form-label">Diagnosis</label>
                                                             <textarea class="form-control" name="diagnosis" rows="3" required></textarea>
                                                         </div>
+                                                        <!-- Prescription input field -->
                                                         <div class="mb-3">
                                                             <label class="form-label">Prescription</label>
                                                             <textarea class="form-control" name="prescription" rows="3" required></textarea>
                                                         </div>
+                                                        <!-- Treatment notes input field -->
                                                         <div class="mb-3">
                                                             <label class="form-label">Treatment Notes</label>
                                                             <textarea class="form-control" name="treatment_notes" rows="2"></textarea>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">
+                                                        <!-- Cancel and submit buttons -->
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                                         <button type="submit" class="btn btn-success">Complete Appointment</button>
                                                     </div>
@@ -106,6 +135,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Display status text for non-booked appointments -->
                                     {% else %}
                                     <span class="text-muted">{{ appointment.status.title() }}</span>
                                     {% endif %}
@@ -115,6 +145,7 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Display message if no appointments found -->
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-calendar-x display-1 text-muted"></i>
@@ -126,31 +157,39 @@
         </div>
     </div>
     
+    <!-- Quick stats and actions sidebar - takes up 4 columns on medium screens and larger -->
     <div class="col-md-4">
+        <!-- Quick Stats card -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">Quick Stats</h5>
             </div>
             <div class="card-body">
                 <div class="text-center">
+                    <!-- Display number of appointments this week -->
                     <h3 class="text-primary">{{ appointments|length }}</h3>
                     <p class="text-muted mb-0">Appointments This Week</p>
                 </div>
             </div>
         </div>
         
+        <!-- Quick Actions card -->
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Quick Actions</h5>
             </div>
             <div class="card-body">
+                <!-- Grid of action buttons with consistent spacing -->
                 <div class="d-grid gap-2">
+                    <!-- Button to set weekly availability -->
                     <a href="{{ url_for('doctor_availability') }}" class="btn btn-outline-success">
                         <i class="bi bi-clock"></i> Set Availability
                     </a>
+                    <!-- Button to set advanced availability with time slots -->
                     <a href="{{ url_for('advanced_doctor_availability') }}" class="btn btn-outline-primary">
                         <i class="bi bi-calendar-week"></i> Advanced Availability
                     </a>
+                    <!-- Button to view all appointments -->
                     <a href="{{ url_for('doctor_appointments') }}" class="btn btn-outline-primary">
                         <i class="bi bi-calendar3"></i> View All Appointments
                     </a>

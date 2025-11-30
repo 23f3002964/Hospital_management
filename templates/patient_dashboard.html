@@ -3,11 +3,14 @@
 {% block title %}Patient Dashboard - Hospital Management System{% endblock %}
 
 {% block content %}
+<!-- Page header section with welcome message -->
 <div class="row">
     <div class="col-12">
+        <!-- Main page title with patient icon -->
         <h1 class="h3 mb-4">
             <i class="bi bi-person"></i> Patient Dashboard
         </h1>
+        <!-- Welcome message showing patient's name -->
         <div class="alert alert-success">
             <i class="bi bi-heart"></i>
             Welcome, <strong>{{ patient.name }}</strong>! Book your appointments and track your health.
@@ -15,12 +18,15 @@
     </div>
 </div>
 
+<!-- Quick action buttons section -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-end">
+            <!-- Button to view hospital departments -->
             <a href="{{ url_for('patient_departments') }}" class="btn btn-outline-info me-2">
                 <i class="bi bi-building"></i> Departments
             </a>
+            <!-- Button to view/edit patient profile -->
             <a href="{{ url_for('patient_profile') }}" class="btn btn-outline-primary">
                 <i class="bi bi-person-circle"></i> My Profile
             </a>
@@ -28,33 +34,41 @@
     </div>
 </div>
 
+<!-- Main content area with appointment booking and doctor listings -->
 <div class="row">
+    <!-- Appointment booking form - takes up 4 columns on medium screens and larger -->
     <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Book New Appointment</h5>
             </div>
             <div class="card-body">
+                <!-- Form to book a new appointment -->
                 <form method="POST" action="{{ url_for('book_appointment') }}">
+                    <!-- Doctor selection dropdown -->
                     <div class="mb-3">
                         <label for="doctor_id" class="form-label">Select Doctor</label>
                         <select class="form-select" id="doctor_id" name="doctor_id" required>
                             <option value="">Choose a doctor...</option>
+                            <!-- Loop through available doctors -->
                             {% for doctor in doctors %}
                             <option value="{{ doctor.id }}">{{ doctor.name }} - {{ doctor.specialization }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     
+                    <!-- Appointment date selection -->
                     <div class="mb-3">
                         <label for="appointment_date" class="form-label">Appointment Date</label>
                         <input type="date" class="form-control" id="appointment_date" name="appointment_date" required>
                     </div>
                     
+                    <!-- Appointment time selection -->
                     <div class="mb-3">
                         <label for="appointment_time" class="form-label">Appointment Time</label>
                         <select class="form-select" id="appointment_time" name="appointment_time" required>
                             <option value="">Select time...</option>
+                            <!-- Available time slots -->
                             <option value="09:00">09:00 AM</option>
                             <option value="09:30">09:30 AM</option>
                             <option value="10:00">10:00 AM</option>
@@ -72,6 +86,7 @@
                         </select>
                     </div>
                     
+                    <!-- Submit button to book appointment -->
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-calendar-plus"></i> Book Appointment
                     </button>
@@ -80,25 +95,33 @@
         </div>
     </div>
     
+    <!-- Available doctors listing - takes up 8 columns on medium screens and larger -->
     <div class="col-md-8 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Available Doctors</h5>
+                <!-- Display count of available doctors -->
                 <small class="text-muted">{{ doctors|length }} doctors available</small>
             </div>
             <div class="card-body">
                 <div class="row">
+                    <!-- Loop through all available doctors -->
                     {% for doctor in doctors %}
+                    <!-- Doctor card - takes up 6 columns on medium screens, 4 on large screens -->
                     <div class="col-md-6 mb-3">
                         <div class="card border-left-primary">
                             <div class="card-body p-3">
                                 <div class="d-flex align-items-center">
+                                    <!-- Doctor avatar with first letter of name -->
                                     <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
                                         {{ doctor.name[0] }}
                                     </div>
                                     <div>
+                                        <!-- Doctor name -->
                                         <h6 class="mb-1">{{ doctor.name }}</h6>
+                                        <!-- Doctor specialization -->
                                         <p class="text-muted mb-1">{{ doctor.specialization }}</p>
+                                        <!-- Doctor phone number -->
                                         <small class="text-success">
                                             <i class="bi bi-telephone"></i> {{ doctor.phone or 'Contact via hospital' }}
                                         </small>
@@ -114,9 +137,11 @@
     </div>
 </div>
 
+<!-- Patient appointments section -->
 <div class="row">
     <div class="col-12">
         <div class="card">
+            <!-- Card header with title and link to view history -->
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">My Appointments</h5>
                 <a href="{{ url_for('patient_history') }}" class="btn btn-sm btn-outline-info">
@@ -124,11 +149,14 @@
                 </a>
             </div>
             <div class="card-body">
+                <!-- Conditional display: show appointments table if appointments exist -->
                 {% if appointments %}
                 <div class="table-responsive">
+                    <!-- Appointments table -->
                     <table class="table">
                         <thead>
                             <tr>
+                                <!-- Table headers -->
                                 <th>Serial No.</th>
                                 <th>Doctor Name</th>
                                 <th>Department</th>
@@ -138,23 +166,34 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loop through patient's appointments -->
                             {% for appointment_tuple in appointments %}
+                            <!-- Extract appointment object and related data -->
                             {% set appointment = appointment_tuple[0] %}
                             {% set doctor_name = appointment_tuple[1] %}
                             {% set specialization = appointment_tuple[2] %}
                             <tr>
+                                <!-- Serial number based on loop index -->
                                 <td>{{ loop.index }}</td>
+                                <!-- Doctor name -->
                                 <td>{{ doctor_name }}</td>
+                                <!-- Doctor specialization/department -->
                                 <td>
                                     <span class="badge bg-info">{{ specialization }}</span>
                                 </td>
+                                <!-- Appointment date -->
                                 <td>{{ appointment.appointment_date }}</td>
+                                <!-- Appointment time -->
                                 <td>{{ appointment.appointment_time }}</td>
+                                <!-- Actions based on appointment status -->
                                 <td>
+                                    <!-- Show different actions for booked appointments -->
                                     {% if appointment.status == 'booked' %}
+                                    <!-- Reschedule appointment button -->
                                     <a href="{{ url_for('reschedule_appointment', appointment_id=appointment.id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-calendar-check"></i> Reschedule
                                     </a>
+                                    <!-- Cancel appointment form with confirmation -->
                                     <form method="POST" action="{{ url_for('cancel_appointment', appointment_id=appointment.id) }}" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" 
                                                 onclick="return confirm('Are you sure you want to cancel this appointment?')">
@@ -168,6 +207,7 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Display message if no appointments found -->
                 {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-calendar-x display-1 text-muted"></i>
@@ -181,7 +221,7 @@
 </div>
 
 <script>
-// Set minimum date to today for appointment booking
+// Set minimum date to today for appointment booking to prevent past dates
 document.addEventListener('DOMContentLoaded', function() {
     // Use server-side date for consistency
     const today = '{{ today_date }}';

@@ -3,28 +3,35 @@
 {% block title %}Admin Dashboard - Hospital Management System{% endblock %}
 
 {% block content %}
+<!-- Page header section -->
 <div class="row">
     <div class="col-12">
+        <!-- Main page title with dashboard icon -->
         <h1 class="h3 mb-4">
             <i class="bi bi-speedometer2"></i> Admin Dashboard
         </h1>
     </div>
 </div>
 
+<!-- Search form section for finding doctors or patients -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
+                <!-- Search form that submits to admin_search route -->
                 <form method="GET" action="{{ url_for('admin_search') }}" class="row g-3">
+                    <!-- Search input field - takes up 7 columns on medium screens and larger -->
                     <div class="col-md-7">
                         <input type="text" class="form-control" name="q" placeholder="Search doctors or patients..." required>
                     </div>
+                    <!-- Search type selector - takes up 3 columns -->
                     <div class="col-md-3">
                         <select name="type" class="form-select">
                             <option value="doctors">Doctors</option>
                             <option value="patients">Patients</option>
                         </select>
                     </div>
+                    <!-- Search button - takes up 2 columns -->
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-search"></i> Search
@@ -36,20 +43,25 @@
     </div>
 </div>
 
+<!-- Statistics cards section showing system overview -->
 <div class="row">
+    <!-- Total Doctors card - takes up 4 columns on medium screens and larger -->
     <div class="col-md-4 mb-4">
         <div class="card bg-primary text-white">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
+                        <!-- Card title and dynamic doctor count -->
                         <h5 class="card-title">Total Doctors</h5>
                         <h2 class="mb-0">{{ total_doctors }}</h2>
                     </div>
                     <div class="col-auto">
+                        <!-- Icon representing doctors -->
                         <i class="bi bi-person-badge display-4"></i>
                     </div>
                 </div>
             </div>
+            <!-- Card footer with link to manage doctors -->
             <div class="card-footer">
                 <a href="{{ url_for('manage_doctors') }}" class="text-white text-decoration-none">
                     View Details <i class="bi bi-arrow-right"></i>
@@ -58,19 +70,23 @@
         </div>
     </div>
     
+    <!-- Total Patients card - takes up 4 columns on medium screens and larger -->
     <div class="col-md-4 mb-4">
         <div class="card bg-success text-white">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
+                        <!-- Card title and dynamic patient count -->
                         <h5 class="card-title">Total Patients</h5>
                         <h2 class="mb-0">{{ total_patients }}</h2>
                     </div>
                     <div class="col-auto">
+                        <!-- Icon representing patients -->
                         <i class="bi bi-people display-4"></i>
                     </div>
                 </div>
             </div>
+            <!-- Card footer with link to manage patients -->
             <div class="card-footer">
                 <a href="{{ url_for('manage_patients') }}" class="text-white text-decoration-none">
                     View Details <i class="bi bi-arrow-right"></i>
@@ -79,15 +95,18 @@
         </div>
     </div>
     
+    <!-- Total Appointments card - takes up 4 columns on medium screens and larger -->
     <div class="col-md-4 mb-4">
         <div class="card bg-info text-white">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col">
+                        <!-- Card title and dynamic appointment count -->
                         <h5 class="card-title">Total Appointments</h5>
                         <h2 class="mb-0">{{ total_appointments }}</h2>
                     </div>
                     <div class="col-auto">
+                        <!-- Icon representing appointments -->
                         <i class="bi bi-calendar-check display-4"></i>
                     </div>
                 </div>
@@ -96,20 +115,26 @@
     </div>
 </div>
 
+<!-- Quick actions and recent appointments section -->
 <div class="row">
+    <!-- Quick Actions card - takes up 6 columns on medium screens and larger -->
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Quick Actions</h5>
             </div>
             <div class="card-body">
+                <!-- Grid of action buttons with consistent spacing -->
                 <div class="d-grid gap-2">
+                    <!-- Button to add new doctor -->
                     <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
                         <i class="bi bi-person-plus"></i> Add New Doctor
                     </a>
+                    <!-- Button to manage existing doctors -->
                     <a href="{{ url_for('manage_doctors') }}" class="btn btn-outline-primary">
                         <i class="bi bi-people"></i> Manage Doctors
                     </a>
+                    <!-- Placeholder button for future reports feature -->
                     <button class="btn btn-outline-success" onclick="alert('Feature coming soon!')">
                         <i class="bi bi-graph-up"></i> View Reports
                     </button>
@@ -118,20 +143,26 @@
         </div>
     </div>
     
+    <!-- Recent Appointments card - takes up 6 columns on medium screens and larger -->
     <div class="col-md-6 mb-4">
         <div class="card">
+            <!-- Card header with title and refresh button -->
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Recent Appointments</h5>
+                <!-- Refresh button to manually update appointment list -->
                 <button class="btn btn-sm btn-outline-secondary" onclick="updateRecentAppointments()">
                     <i class="bi bi-arrow-repeat"></i> Refresh
                 </button>
             </div>
             <div class="card-body">
+                <!-- Conditional display: show appointments table if appointments exist -->
                 {% if recent_appointments %}
                 <div class="table-responsive">
+                    <!-- Appointments table with ID for JavaScript updates -->
                     <table class="table table-sm" id="recent-appointments-table">
                         <thead>
                             <tr>
+                                <!-- Table headers -->
                                 <th>Patient</th>
                                 <th>Doctor</th>
                                 <th>Date</th>
@@ -140,19 +171,27 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loop through first 5 recent appointments -->
                             {% for appointment_tuple in recent_appointments[:5] %}
+                            <!-- Extract appointment object and related data -->
                             {% set appointment = appointment_tuple[0] %}
                             {% set patient_name = appointment_tuple[1] %}
                             {% set doctor_name = appointment_tuple[2] %}
                             <tr>
+                                <!-- Patient name column -->
                                 <td>{{ patient_name }}</td>
+                                <!-- Doctor name column -->
                                 <td>{{ doctor_name }}</td>
+                                <!-- Appointment date column -->
                                 <td>{{ appointment.appointment_date }}</td>
+                                <!-- Status column with dynamic badge styling -->
                                 <td>
+                                    <!-- Conditional badge styling based on appointment status -->
                                     <span class="badge bg-{{ 'success' if appointment.status == 'completed' else 'primary' if appointment.status == 'booked' else 'danger' if appointment.status == 'cancelled' else 'secondary' }}">
                                         {{ appointment.status.title() }}
                                     </span>
                                 </td>
+                                <!-- Actions column with link to patient history -->
                                 <td>
                                     <a href="{{ url_for('admin_patient_history', patient_id=appointment.patient_id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-clock-history"></i> Patient History
@@ -163,6 +202,7 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Display message if no appointments found -->
                 {% else %}
                 <p class="text-muted">No appointments found</p>
                 {% endif %}
@@ -172,7 +212,7 @@
 </div>
 
 <script>
-// Function to format date as YYYY-MM-DD
+// Function to format date as YYYY-MM-DD for consistent display
 function formatDate(dateString) {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -184,7 +224,7 @@ function formatDate(dateString) {
     return `${year}-${month}-${day}`;
 }
 
-// Function to update recent appointments
+// Function to update recent appointments via AJAX
 function updateRecentAppointments() {
     fetch('/admin/dashboard/recent-appointments')
         .then(response => response.json())
