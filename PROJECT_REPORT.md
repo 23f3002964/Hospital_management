@@ -188,4 +188,4 @@ erDiagram
 - Improved code organization and maintainability
 - Easier to extend and modify functionality
 
-### Video link : [Hospital Management System](https://www.youtube.com/watch?v=Q9u0OqV9a9w)
+### Video link : [Hospital Management System](https://drive.google.com/drive/folders/1ilwUKoVS9RnRdwWmbWBCh8nDFsY2t3rS?usp=sharing)
