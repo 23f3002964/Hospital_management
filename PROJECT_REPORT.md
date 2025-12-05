@@ -188,4 +188,59 @@ erDiagram
 - Improved code organization and maintainability
 - Easier to extend and modify functionality
 
-### Video link : [Hospital Management System](https://drive.google.com/drive/folders/1ilwUKoVS9RnRdwWmbWBCh8nDFsY2t3rS?usp=sharing)
+## 6. AI/LLM Usage in Development
+
+### Bootstrap / CSS Styling and Layout (8%)
+
+During the development of the user interface, AI/LLM assistance was utilized for:
+
+1. **CSS Class Selection**: Assistance in selecting appropriate Bootstrap 5 classes for responsive layouts, such as:
+   - Grid system classes (`col-md-*`, `row`, `container`)
+   - Component classes (`card`, `btn`, `form-control`)
+   - Utility classes (`mt-*`, `mb-*`, `text-*`, `bg-*`)
+
+2. **Responsive Design Implementation**: Guidance on implementing responsive behaviors across different device sizes using Bootstrap's breakpoints.
+
+3. **Component Styling**: Help with customizing Bootstrap components like:
+   - Navigation bars with proper alignment
+   - Card layouts with headers and footers
+   - Form elements with proper spacing and validation states
+   - Badge and button variations for different statuses
+
+4. **Custom CSS Development**: Assistance in writing custom CSS rules in `style.css` for:
+   - Color scheme consistency using CSS variables
+   - Hover effects and transitions
+   - Responsive adjustments for mobile views
+   - Custom animations and keyframe definitions
+
+5. **Accessibility Features**: Recommendations for implementing accessible UI elements that comply with WCAG standards.
+
+### JavaScript / AJAX (Vanilla) Interactivity and Client-Side Logic (5%)
+
+AI/LLM assistance was used for implementing client-side functionality:
+
+1. **Form Validation Logic**: Development of comprehensive validation functions in `validation.js` for:
+   - Email format checking using regular expressions
+   - Phone number validation with international format support
+   - Password strength requirements
+   - Name and username length validations
+
+2. **Event Handling**: Implementation of event listeners for form submissions and user interactions.
+
+3. **AJAX Implementation**: Creation of asynchronous data fetching for the admin dashboard's auto-refresh feature:
+   - Using the modern Fetch API for HTTP requests
+   - JSON data parsing and DOM manipulation
+   - Error handling for network requests
+
+4. **DOM Manipulation**: Dynamic content updates without page refresh, specifically:
+   - Table row generation for appointment listings
+   - Date formatting functions
+   - Conditional element display based on data availability
+
+5. **Timing Functions**: Implementation of auto-refresh functionality using `setInterval()` and `setTimeout()`.
+
+6. **Template Literals**: Use of ES6 template literals for dynamic HTML generation in JavaScript.
+
+The AI/LLM assistance helped accelerate development by providing best practices, reducing research time, and suggesting efficient implementation approaches for both styling and client-side logic. However, all code was reviewed and customized to fit the specific requirements of the hospital management system.
+
+## 7. Video link : [Hospital Management System](https://drive.google.com/drive/folders/1ilwUKoVS9RnRdwWmbWBCh8nDFsY2t3rS?usp=sharing)
